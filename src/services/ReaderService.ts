@@ -62,6 +62,12 @@ export async function openBook(
   const blob = new Blob([epubBytes], { type: 'application/epub+zip' })
   const url = URL.createObjectURL(blob)
 
+  // Measure the container for actual pixel dimensions.
+  // epub.js parseFloat('100%') = 100, not the container size.
+  const rect = element.getBoundingClientRect()
+  const width = rect.width || window.innerWidth
+  const height = rect.height || window.innerHeight
+
   // Load with epub.js — blob URLs have no .epub extension,
   // so we must explicitly tell epub.js to open as an EPUB archive
   const book = ePub(url, { openAs: 'epub' })
@@ -71,10 +77,10 @@ export async function openBook(
     console.error('epub.js failed to open book:', err)
   })
 
-  console.log('[ReaderService] Opening book:', storageKey, 'url:', url)
+  console.log('[ReaderService] Opening book:', storageKey, 'size:', width, 'x', height)
   const rendition = book.renderTo(element, {
-    width: '100%',
-    height: '100%',
+    width,
+    height,
     spread: 'none',
     flow: 'paginated',
   })
@@ -101,6 +107,16 @@ export async function openBook(
   rendition.themes.select('light')
 
   state = { book, rendition, element }
+
+  // Handle window resize
+  const onResize = () => {
+    const r = element.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0) {
+      rendition.resize(r.width, r.height)
+    }
+  }
+  window.addEventListener('resize', onResize)
+
   return { book, rendition }
 }
 
