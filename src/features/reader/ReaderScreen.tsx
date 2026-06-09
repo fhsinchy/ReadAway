@@ -11,6 +11,8 @@ import {
   applyFontSize,
   onLocationChange,
   getBookTitle,
+  generateLocations,
+  getCurrentPercentage,
 } from '@/services/ReaderService'
 import { useTheme } from '@/hooks/useTheme'
 import './ReaderScreen.css'
@@ -42,7 +44,10 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
       if (!viewer) return
       console.log('[ReaderScreen] Init start, storageKey:', book.storageKey)
       try {
-        const { rendition } = await openBook(book.storageKey, viewer)
+        const { book: epubBook, rendition } = await openBook(
+          book.storageKey,
+          viewer,
+        )
         console.log('[ReaderScreen] Book opened successfully')
         if (effectId !== effectIdRef.current) {
           closeBook()
@@ -105,6 +110,19 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
         // Get title
         const title = await getBookTitle()
         if (effectId === effectIdRef.current) setBookTitle(title || book.title)
+
+        generateLocations(epubBook)
+          .then(() => {
+            if (
+              effectId === effectIdRef.current &&
+              renditionRef.current === rendition
+            ) {
+              setPercentage(getCurrentPercentage(rendition))
+            }
+          })
+          .catch((err: unknown) => {
+            console.error('[ReaderScreen] Failed to generate locations:', err)
+          })
       } catch (err) {
         console.error('Failed to open book:', err)
       }

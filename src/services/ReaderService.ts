@@ -27,6 +27,19 @@ export interface ReaderState {
   rendition: Rendition | null
   element: HTMLElement | null
   onResize: (() => void) | null
+  resizeObserver: ResizeObserver | null
+}
+
+interface ReaderLocation {
+  start?: {
+    cfi?: string
+    percentage?: number
+    index?: string | number
+    displayed?: {
+      page?: number
+      total?: number
+    }
+  }
 }
 
 // ============================================================
@@ -38,6 +51,7 @@ let state: ReaderState = {
   rendition: null,
   element: null,
   onResize: null,
+  resizeObserver: null,
 }
 
 // ============================================================
@@ -114,7 +128,12 @@ export async function openBook(
   }
   window.addEventListener('resize', onResize)
 
-  state = { book, rendition, element, onResize }
+  const resizeObserver =
+    'ResizeObserver' in window ? new ResizeObserver(onResize) : null
+  resizeObserver?.observe(element)
+  requestAnimationFrame(onResize)
+
+  state = { book, rendition, element, onResize, resizeObserver }
 
   return { book, rendition }
 }
@@ -144,6 +163,65 @@ export async function restoreProgress(
 }
 
 /**
+ * Generate CFI locations so whole-book percentage can be calculated.
+ */
+export async function generateLocations(book: Book): Promise<void> {
+  if (book.locations.length() > 0) return
+
+  await book.ready
+  await book.locations.generate(1600)
+}
+
+function getSpineItemCount(book: Book): number {
+  return (
+    (book.spine as unknown as { spineItems?: unknown[] }).spineItems?.length ?? 0
+  )
+}
+
+function getFallbackPercentage(
+  location: ReaderLocation,
+  rendition: Rendition,
+): number {
+  const start = location.start
+  if (!start) return 0
+
+  if (typeof start.percentage === 'number') {
+    return Math.round(start.percentage * 100)
+  }
+
+  const spineIndex = Number(start.index)
+  const spineCount = getSpineItemCount(rendition.book)
+  if (!Number.isFinite(spineIndex) || spineCount <= 0) return 0
+
+  const displayedPage = start.displayed?.page ?? 1
+  const displayedTotal = start.displayed?.total ?? 1
+  const sectionProgress = Math.max(
+    0,
+    Math.min(1, (displayedPage - 1) / displayedTotal),
+  )
+
+  return Math.round(((spineIndex + sectionProgress) / spineCount) * 100)
+}
+
+/**
+ * Get whole-book progress from the current visible CFI.
+ */
+export function getCurrentPercentage(rendition: Rendition): number {
+  try {
+    const location = rendition.currentLocation() as unknown as ReaderLocation | null
+    const cfi = location?.start?.cfi
+
+    if (cfi && rendition.book.locations.length() > 0) {
+      return Math.round(rendition.book.locations.percentageFromCfi(cfi) * 100)
+    }
+
+    return location ? getFallbackPercentage(location, rendition) : 0
+  } catch {
+    return 0
+  }
+}
+
+/**
  * Save current reading progress to the database.
  */
 export async function saveProgress(
@@ -151,17 +229,15 @@ export async function saveProgress(
   syncKey: string,
 ): Promise<void> {
   try {
-    const location = rendition.currentLocation() as unknown as {
-      start: { cfi: string; percentage: number }
-    } | null
-    if (!location || !location.start) return
+    const location = rendition.currentLocation() as unknown as ReaderLocation | null
+    const cfi = location?.start?.cfi
+    if (!cfi) return
 
-    const start = location.start as { cfi: string; percentage: number }
-    const percentage = Math.round((start.percentage || 0) * 100)
+    const percentage = getCurrentPercentage(rendition)
 
     await db.progress.put({
       syncKey,
-      locator: start.cfi,
+      locator: cfi,
       percentage,
       updatedAt: Date.now(),
     })
@@ -243,7 +319,7 @@ export function onLocationChange(
       start?: { cfi?: string; percentage?: number }
     } | null)?.start
     if (start?.cfi) {
-      callback(start.cfi, Math.round((start.percentage || 0) * 100))
+      callback(start.cfi, getCurrentPercentage(rendition))
     }
   })
 }
@@ -252,6 +328,10 @@ export function onLocationChange(
  * Clean up the current book and rendition.
  */
 export function closeBook(): void {
+  if (state.resizeObserver) {
+    state.resizeObserver.disconnect()
+  }
+
   if (state.onResize) {
     window.removeEventListener('resize', state.onResize)
   }
@@ -270,7 +350,13 @@ export function closeBook(): void {
     }
   }
 
-  state = { book: null, rendition: null, element: null, onResize: null }
+  state = {
+    book: null,
+    rendition: null,
+    element: null,
+    onResize: null,
+    resizeObserver: null,
+  }
 }
 
 /**
