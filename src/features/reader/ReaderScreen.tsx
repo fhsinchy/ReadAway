@@ -39,14 +39,18 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
 
     async function init() {
       if (!viewer) return
+      console.log('[ReaderScreen] Init start, storageKey:', book.storageKey)
       try {
         const { rendition } = await openBook(book.storageKey, viewer)
+        console.log('[ReaderScreen] Book opened successfully')
         if (cancelled) return
         renditionRef.current = rendition
 
         // Restore progress
         const restored = await restoreProgress(rendition, book.syncKey)
+        console.log('[ReaderScreen] Progress restored:', restored)
         if (!restored) {
+          console.log('[ReaderScreen] Calling rendition.display()')
           rendition.display()
         }
 
@@ -61,6 +65,17 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
         // Save progress on page change
         onLocationChange(rendition, (_locator, pct) => {
           setPercentage(pct)
+        })
+
+        // Log rendering events
+        rendition.on('rendered', (section: any) => {
+          console.log('[ReaderScreen] Section rendered:', section?.href)
+        })
+        rendition.on('displayed', (section: any) => {
+          console.log('[ReaderScreen] Section displayed:', section?.href)
+        })
+        rendition.on('renderError', (err: any) => {
+          console.error('[ReaderScreen] Render error:', err)
         })
 
         // Handle clicks inside the epub.js iframe for tap zones

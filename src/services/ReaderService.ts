@@ -65,6 +65,13 @@ export async function openBook(
   // Load with epub.js — blob URLs have no .epub extension,
   // so we must explicitly tell epub.js to open as an EPUB archive
   const book = ePub(url, { openAs: 'epub' })
+
+  // Log any loading errors
+  book.opened.catch((err: Error) => {
+    console.error('epub.js failed to open book:', err)
+  })
+
+  console.log('[ReaderService] Opening book:', storageKey, 'url:', url)
   const rendition = book.renderTo(element, {
     width: '100%',
     height: '100%',
