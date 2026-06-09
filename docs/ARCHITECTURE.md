@@ -58,7 +58,6 @@ Examples include:
 * epub.js
 * Dexie
 * vite-plugin-pwa
-* html5-qrcode
 * IndexedDB
 * OPFS
 * Web Crypto API
@@ -108,12 +107,6 @@ PWA Support:
 
 ```text id="jlwmfh"
 vite-plugin-pwa
-```
-
-QR Scanning:
-
-```text id="siy3au"
-html5-qrcode
 ```
 
 Cryptography:
@@ -450,16 +443,20 @@ Archive contents:
 ```text id="jlwmku"
 manifest.json
 books/
+progress/
 ```
 
 Users choose:
 
-* Which books to export
-* Whether to include progress
+* Which books to back up
 
-Books are always included.
+Each selected book is backed up as a snapshot.
 
-Progress is optional.
+The snapshot always keeps the EPUB file, metadata, reading progress when it
+exists, and original timestamps together.
+
+During restore, ReadAway must compare backup progress timestamps with local
+progress timestamps. Books with newer local progress are unchecked by default.
 
 ---
 

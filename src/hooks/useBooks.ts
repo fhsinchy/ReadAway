@@ -14,8 +14,18 @@ export function useBooks() {
   }, [])
 
   useEffect(() => {
-    loadBooks()
-  }, [loadBooks])
+    let cancelled = false
+
+    db.books.orderBy('importedAt').reverse().toArray().then((all) => {
+      if (cancelled) return
+      setBooks(all)
+      setLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const deleteBook = useCallback(async (syncKey: string) => {
     await db.books.delete(syncKey)

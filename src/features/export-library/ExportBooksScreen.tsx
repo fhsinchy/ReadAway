@@ -12,7 +12,6 @@ type ExportPhase = 'select' | 'exporting' | 'done'
 export function ExportBooksScreen({ onBack }: Props) {
   const [books, setBooks] = useState<Book[]>([])
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
-  const [includeProgress, setIncludeProgress] = useState(true)
   const [phase, setPhase] = useState<ExportPhase>('select')
 
   useEffect(() => {
@@ -42,13 +41,13 @@ export function ExportBooksScreen({ onBack }: Props) {
     setPhase('exporting')
 
     try {
-      const blob = await exportArchive([...selectedKeys], { includeProgress })
+      const blob = await exportArchive([...selectedKeys])
 
       // Trigger browser download
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `readaway-export-${Date.now()}.raway`
+      a.download = `readaway-backup-${Date.now()}.raway`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -59,7 +58,7 @@ export function ExportBooksScreen({ onBack }: Props) {
       console.error('Export failed:', err)
       setPhase('select')
     }
-  }, [selectedKeys, includeProgress])
+  }, [selectedKeys])
 
   return (
     <div className="export-screen">
@@ -67,7 +66,7 @@ export function ExportBooksScreen({ onBack }: Props) {
         <button className="btn-text" onClick={onBack}>
           ← Back
         </button>
-        <h2 className="export-title">Export Books</h2>
+        <h2 className="export-title">Back Up Library</h2>
         <div style={{ width: 50 }} />
       </header>
 
@@ -99,19 +98,9 @@ export function ExportBooksScreen({ onBack }: Props) {
               ))}
             </div>
 
-            <div className="export-options">
-              <div className="export-option">
-                <input
-                  type="checkbox"
-                  id="include-progress"
-                  checked={includeProgress}
-                  onChange={(e) => setIncludeProgress(e.target.checked)}
-                />
-                <label htmlFor="include-progress">
-                  Include reading progress
-                </label>
-              </div>
-            </div>
+            <p className="export-note">
+              Reading progress and timestamps are included with each selected book.
+            </p>
           </div>
 
           <div className="export-footer">
@@ -120,7 +109,7 @@ export function ExportBooksScreen({ onBack }: Props) {
               disabled={selectedKeys.size === 0}
               onClick={handleExport}
             >
-              Export {selectedKeys.size > 0 ? `(${selectedKeys.size})` : ''}
+              Back Up {selectedKeys.size > 0 ? `(${selectedKeys.size})` : ''}
             </button>
           </div>
         </>
@@ -128,18 +117,18 @@ export function ExportBooksScreen({ onBack }: Props) {
 
       {phase === 'exporting' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <p style={{ color: '#888' }}>Generating archive...</p>
+          <p style={{ color: '#888' }}>Creating backup...</p>
         </div>
       )}
 
       {phase === 'done' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <h2>Archive created successfully.</h2>
+          <h2>Backup created successfully.</h2>
           <p style={{ color: '#666', marginTop: 8 }}>
             Your browser's save dialog should appear shortly.
           </p>
           <button className="btn-primary" onClick={onBack} style={{ marginTop: 16 }}>
-            Back to Library
+            Back to Settings
           </button>
         </div>
       )}

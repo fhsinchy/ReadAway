@@ -31,11 +31,15 @@ Import EPUB
 
 Library
 ↓
-Export Books
+Settings
+↓
+Back Up Library
 
 Library
 ↓
-Import Archive
+Settings
+↓
+Restore Library
 
 Library
 ↓
@@ -55,8 +59,8 @@ Screens:
 3. Reader
 4. Table of Contents
 5. Settings
-6. Export Books
-7. Import Archive
+6. Back Up Library
+7. Restore Library
 
 Sheet:
 
@@ -83,8 +87,7 @@ App Bar
 --------------------------------
 ReadAway
 
-[Import]
-[Export]
+[Add Book]
 [Settings]
 
 Continue Reading
@@ -141,23 +144,6 @@ Tapping:
 ```text id="jlwm6q"
 Open Reader
 ```
-
-Long press:
-
-```text id="jlwm7r"
-Enter Selection Mode
-```
-
----
-
-## Selection Mode
-
-Available actions:
-
-* Select books
-* Select all
-* Deselect all
-* Export selected
 
 ---
 
@@ -422,7 +408,8 @@ Minimal application settings.
 Library
 
 ```text id="jlwmpt"
-Import Archive
+Back Up Library
+Restore Library
 ```
 
 Appearance
@@ -452,25 +439,25 @@ Do not add:
 
 ---
 
-# 7. Export Books Screen
+# 7. Back Up Library Screen
 
 Purpose:
 
-Generate ReadAway archives.
+Generate ReadAway backups.
 
 ---
 
 ## Layout
 
 ```text id="jlwmst"
-Export Books
+Back Up Library
 
 Selected:
 3 books
 
-☑ Include reading progress
+Progress and timestamps included
 
-[Export]
+[Back Up]
 ```
 
 ---
@@ -488,31 +475,31 @@ Users may:
 ## Success State
 
 ```text id="jlwmtt"
-Archive created successfully.
+Backup created successfully.
 ```
 
 Native browser save dialog opens.
 
 ---
 
-# 8. Import Archive Screen
+# 8. Restore Library Screen
 
 Purpose:
 
-Import RAWAY archives.
+Restore RAWAY backups.
 
 ---
 
 ## Flow
 
 ```text id="jlwmut"
-Choose Archive
+Choose Backup
 ↓
 Preview Contents
 ↓
 Select Books
 ↓
-Import
+Restore
 ```
 
 ---
@@ -521,10 +508,10 @@ Import
 
 ```text id="jlwmvt"
 ☑ Dracula
-☑ Carmilla
-☑ Interim
+☐ Carmilla — newer progress on this device
+☑ Interim — backup has newer progress
 
-Includes Progress: Yes
+Different EPUB versions are marked before restore.
 ```
 
 ---
@@ -532,7 +519,7 @@ Includes Progress: Yes
 ## Import Action
 
 ```text id="jlwmwt"
-[Import Selected]
+[Restore Selected]
 ```
 
 ---
@@ -540,13 +527,13 @@ Includes Progress: Yes
 ## Success State
 
 ```text id="jlwmxt"
-Books imported successfully.
+Library restored successfully.
 ```
 
 Actions:
 
 ```text id="jlwmyt"
-[Back to Library]
+[Back to Settings]
 ```
 
 ---

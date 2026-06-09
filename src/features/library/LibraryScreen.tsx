@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import type { Book } from '@/types'
 import { useBooks } from '@/hooks/useBooks'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
@@ -8,21 +8,17 @@ import './LibraryScreen.css'
 interface Props {
   onImportEpub: () => void
   onOpenBook: (book: Book) => void
-  onExport: () => void
   onSettings: () => void
 }
 
 export function LibraryScreen({
   onImportEpub,
   onOpenBook,
-  onExport,
   onSettings,
 }: Props) {
   const { books, loading } = useBooks()
   const { showPrompt, showInstallPrompt, dismissPrompt, triggerInstallPrompt, isInstallable } =
     usePwaInstall()
-  const [selectionMode, setSelectionMode] = useState(false)
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [booksWithProgress, setBooksWithProgress] = useState<
     (Book & { progress?: number; lastReadAt?: number })[]
   >([])
@@ -60,31 +56,6 @@ export function LibraryScreen({
     }
   }, [loading, isInstallable, showInstallPrompt])
 
-  const toggleSelection = useCallback((syncKey: string) => {
-    setSelectedKeys((prev) => {
-      const next = new Set(prev)
-      if (next.has(syncKey)) {
-        next.delete(syncKey)
-      } else {
-        next.add(syncKey)
-      }
-      return next
-    })
-  }, [])
-
-  const selectAll = useCallback(() => {
-    setSelectedKeys(new Set(books.map((b) => b.syncKey)))
-  }, [books])
-
-  const deselectAll = useCallback(() => {
-    setSelectedKeys(new Set())
-  }, [])
-
-  const exitSelectionMode = useCallback(() => {
-    setSelectionMode(false)
-    setSelectedKeys(new Set())
-  }, [])
-
   if (loading) {
     return (
       <div className="library">
@@ -100,41 +71,13 @@ export function LibraryScreen({
         <h1 className="library-title">ReadAway</h1>
         <div className="library-actions">
           <button className="btn-text" onClick={onImportEpub}>
-            Import
-          </button>
-          <button className="btn-text" onClick={onExport}>
-            Export
+            Add Book
           </button>
           <button className="btn-text" onClick={onSettings}>
             Settings
           </button>
         </div>
       </header>
-
-      {/* Selection bar */}
-      {selectionMode && (
-        <div className="selection-bar">
-          <button className="btn-text" onClick={selectAll}>
-            Select All
-          </button>
-          <button className="btn-text" onClick={deselectAll}>
-            Deselect All
-          </button>
-          <span className="selection-count">
-            {selectedKeys.size} selected
-          </span>
-          <button
-            className="btn-primary"
-            disabled={selectedKeys.size === 0}
-            onClick={onExport}
-          >
-            Export Selected
-          </button>
-          <button className="btn-text" onClick={exitSelectionMode}>
-            Cancel
-          </button>
-        </div>
-      )}
 
       {/* PWA Install Prompt */}
       {showPrompt && (
@@ -177,13 +120,6 @@ export function LibraryScreen({
                   key={book.syncKey}
                   book={book}
                   onOpen={() => onOpenBook(book)}
-                  selectionMode={selectionMode}
-                  selected={selectedKeys.has(book.syncKey)}
-                  onToggleSelect={() => toggleSelection(book.syncKey)}
-                  onLongPress={() => {
-                    setSelectionMode(true)
-                    toggleSelection(book.syncKey)
-                  }}
                 />
               ))}
             </div>
@@ -197,44 +133,15 @@ export function LibraryScreen({
 function BookCard({
   book,
   onOpen,
-  selectionMode,
-  selected,
-  onToggleSelect,
-  onLongPress,
 }: {
   book: Book & { progress?: number; lastReadAt?: number }
   onOpen: () => void
-  selectionMode: boolean
-  selected: boolean
-  onToggleSelect: () => void
-  onLongPress: () => void
 }) {
   return (
     <div
-      className={`book-card ${selected ? 'book-card-selected' : ''}`}
-      onClick={() => {
-        if (selectionMode) {
-          onToggleSelect()
-        } else {
-          onOpen()
-        }
-      }}
-      onContextMenu={(e) => {
-        e.preventDefault()
-        onLongPress()
-      }}
+      className="book-card"
+      onClick={onOpen}
     >
-      {/* Selection checkbox */}
-      {selectionMode && (
-        <div className="book-card-check">
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={onToggleSelect}
-          />
-        </div>
-      )}
-
       {/* Cover */}
       <div className="book-card-cover">
         {book.coverPath ? (

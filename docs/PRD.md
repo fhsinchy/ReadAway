@@ -219,20 +219,18 @@ Requirements:
 
 ---
 
-# Library Export
+# Library Backup
 
-Users can export selected books.
+Users can back up selected books from Settings.
 
-Export flow:
+Backup flow:
 
 ```text
-Library
+Settings
 ↓
 Select books
 ↓
-Choose export options
-↓
-Generate archive
+Generate backup
 ↓
 Save or share
 ```
@@ -243,37 +241,33 @@ Users can:
 * Select multiple books
 * Select all books
 
-Export options:
-
-```text
-☑ Include reading progress
-```
-
-Books are always included.
-
-Progress is optional.
+Books, reading progress, and timestamps are always included together.
 
 ---
 
-# Library Import
+# Library Restore
 
-ReadAway imports its own archive format.
+ReadAway restores its own archive format.
 
-Import flow:
+Restore flow:
 
 ```text
 Select .raway archive
 ↓
-Preview contents
+Preview contents and local conflicts
 ↓
 Select books
 ↓
-Import
+Restore
 ```
 
-Imported books are copied into browser-managed storage.
+Restored books are copied into browser-managed storage.
 
-If progress exists in the archive, it is restored.
+Each selected book is restored as a snapshot: EPUB file, metadata, reading
+progress, and timestamps are imported together.
+
+If this device has newer progress than the backup for a book, that book is
+unchecked by default and clearly marked in the preview.
 
 ---
 
@@ -291,13 +285,16 @@ Structure:
 manifest.json
 
 books/
+
+progress/
 ```
 
 The archive contains:
 
 * EPUB files
 * Metadata
-* Optional progress
+* Reading progress
+* Snapshot timestamps
 
 ---
 
@@ -331,6 +328,6 @@ The following are explicitly out of scope for the MVP:
 * Book stores
 * Onboarding tutorials
 * Reading statistics
-* Cross-device QR synchronization
+* Cross-device synchronization
 
 If a feature is not listed in this document, it is not part of the MVP.

@@ -1,6 +1,10 @@
 import { useState, useRef, useCallback } from 'react'
-import type { ArchiveManifest } from '@/types'
-import { previewArchive, importFromArchive } from '@/services/ExportService'
+import {
+  previewRestore,
+  importFromArchive,
+  type RestorePreview,
+  type RestorePreviewItem,
+} from '@/services/ExportService'
 
 interface Props {
   onBack: () => void
@@ -10,7 +14,7 @@ type ImportPhase = 'choose' | 'preview' | 'importing' | 'done' | 'error'
 
 export function ImportArchiveScreen({ onBack }: Props) {
   const [phase, setPhase] = useState<ImportPhase>('choose')
-  const [manifest, setManifest] = useState<ArchiveManifest | null>(null)
+  const [preview, setPreview] = useState<RestorePreview | null>(null)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -23,9 +27,15 @@ export function ImportArchiveScreen({ onBack }: Props) {
 
     try {
       fileRef.current = file
-      const m = await previewArchive(file)
-      setManifest(m)
-      setSelectedKeys(new Set(m.books.map((b) => b.syncKey)))
+      const nextPreview = await previewRestore(file)
+      setPreview(nextPreview)
+      setSelectedKeys(
+        new Set(
+          nextPreview.items
+            .filter((item) => item.defaultSelected)
+            .map((item) => item.entry.syncKey),
+        ),
+      )
       setPhase('preview')
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Invalid archive')
@@ -52,7 +62,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
       setResult(res)
       setPhase('done')
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Import failed')
+      setErrorMsg(err instanceof Error ? err.message : 'Restore failed')
       setPhase('error')
     }
   }, [selectedKeys])
@@ -67,7 +77,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
         <button className="btn-text" onClick={onBack}>
           ← Back
         </button>
-        <h2 className="export-title">Import Archive</h2>
+        <h2 className="export-title">Restore Library</h2>
         <div style={{ width: 50 }} />
       </header>
 
@@ -81,37 +91,47 @@ export function ImportArchiveScreen({ onBack }: Props) {
 
       {phase === 'choose' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <h2>Import Archive</h2>
+          <h2>Restore Library</h2>
           <p style={{ color: '#666', marginTop: 8, marginBottom: 16 }}>
-            Select a .raway archive to import books.
+            Select a ReadAway backup to restore books and reading progress.
           </p>
           <button className="btn-primary" onClick={handleChooseFile}>
-            Choose Archive
+            Choose Backup
           </button>
         </div>
       )}
 
-      {phase === 'preview' && manifest && (
+      {phase === 'preview' && preview && (
         <>
           <div className="export-content">
             <p style={{ fontSize: 13, color: '#888', marginBottom: 12 }}>
-              {manifest.books.length} book{manifest.books.length !== 1 ? 's' : ''} in archive
+              {preview.manifest.books.length} book{preview.manifest.books.length !== 1 ? 's' : ''} in backup
             </p>
 
+            {preview.items.some((item) => item.status === 'local_newer') && (
+              <div className="restore-warning">
+                <h3>Newer progress on this device</h3>
+                <p>
+                  These books are unchecked so your newer local reading position is kept.
+                </p>
+              </div>
+            )}
+
             <div className="export-book-list">
-              {manifest.books.map((entry) => (
-                <div key={entry.syncKey} className="export-book-item">
+              {preview.items.map((item) => (
+                <div
+                  key={item.entry.syncKey}
+                  className={`export-book-item ${item.status === 'local_newer' ? 'restore-book-local-newer' : ''}`}
+                >
                   <input
                     type="checkbox"
-                    checked={selectedKeys.has(entry.syncKey)}
-                    onChange={() => toggleBook(entry.syncKey)}
+                    checked={selectedKeys.has(item.entry.syncKey)}
+                    onChange={() => toggleBook(item.entry.syncKey)}
                   />
                   <div className="export-book-info">
-                    <div className="export-book-title">{entry.title}</div>
-                    <div className="export-book-author">
-                      {entry.author}
-                      {entry.hasProgress ? ' · Includes progress' : ''}
-                    </div>
+                    <div className="export-book-title">{item.entry.title}</div>
+                    <div className="export-book-author">{item.entry.author}</div>
+                    <RestoreItemStatus item={item} />
                   </div>
                 </div>
               ))}
@@ -124,7 +144,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
               disabled={selectedKeys.size === 0}
               onClick={handleImport}
             >
-              Import Selected
+              Restore Selected
               {selectedKeys.size > 0 ? ` (${selectedKeys.size})` : ''}
             </button>
           </div>
@@ -133,25 +153,25 @@ export function ImportArchiveScreen({ onBack }: Props) {
 
       {phase === 'importing' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <p style={{ color: '#888' }}>Importing books...</p>
+          <p style={{ color: '#888' }}>Restoring library...</p>
         </div>
       )}
 
       {phase === 'done' && result && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <h2>Books imported successfully.</h2>
+          <h2>Library restored successfully.</h2>
           <p style={{ color: '#666', marginTop: 8 }}>
-            {result.imported} imported{result.skipped > 0 ? `, ${result.skipped} skipped` : ''}
+            {result.imported} restored{result.skipped > 0 ? `, ${result.skipped} skipped` : ''}
           </p>
           <button className="btn-primary" onClick={onBack} style={{ marginTop: 16 }}>
-            Back to Library
+            Back to Settings
           </button>
         </div>
       )}
 
       {phase === 'error' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <h2>Import Failed</h2>
+          <h2>Restore Failed</h2>
           <p style={{ color: '#666', marginTop: 8 }}>{errorMsg}</p>
           <button
             className="btn-primary"
@@ -164,4 +184,55 @@ export function ImportArchiveScreen({ onBack }: Props) {
       )}
     </div>
   )
+}
+
+function RestoreItemStatus({ item }: { item: RestorePreviewItem }) {
+  const archiveProgress = item.archiveProgress
+  const localProgress = item.localProgress
+
+  return (
+    <div className="restore-book-status">
+      <span>{statusText(item)}</span>
+      {item.editionMismatch && (
+        <span>
+          Different EPUB version. Restoring replaces the local copy and its progress.
+        </span>
+      )}
+      {(archiveProgress || localProgress) && (
+        <span>
+          {localProgress
+            ? `This device: ${formatProgress(localProgress.percentage)}${formatDate(localProgress.updatedAt)}`
+            : 'This device: no progress'}
+          {' · '}
+          {archiveProgress
+            ? `Backup: ${formatProgress(archiveProgress.percentage)}${formatDate(archiveProgress.updatedAt)}`
+            : 'Backup: no progress'}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function statusText(item: RestorePreviewItem): string {
+  switch (item.status) {
+    case 'new':
+      return 'New book.'
+    case 'archive_newer':
+      return 'Backup has newer progress.'
+    case 'local_newer':
+      return 'This device has newer progress.'
+    case 'archive_no_progress':
+      return 'Backup has no progress for this book.'
+    case 'same_progress':
+      return item.localBook ? 'Already in library.' : 'Ready to restore.'
+  }
+}
+
+function formatProgress(progress: number): string {
+  return `${Math.round(progress)}%`
+}
+
+function formatDate(timestamp: number): string {
+  if (!timestamp) return ''
+  return `, ${new Date(timestamp).toLocaleDateString()}`
 }

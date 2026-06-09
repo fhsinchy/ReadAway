@@ -1,21 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import './SettingsScreen.css'
 
 interface Props {
   onBack: () => void
-  onImportArchive: () => void
+  onBackupLibrary: () => void
+  onRestoreLibrary: () => void
 }
 
-export function SettingsScreen({ onBack, onImportArchive }: Props) {
+export function SettingsScreen({
+  onBack,
+  onBackupLibrary,
+  onRestoreLibrary,
+}: Props) {
   const { theme, setTheme, fontSize, setFontSize } = useTheme()
   const [appearanceOpen, setAppearanceOpen] = useState(false)
-  const [installSupported, setInstallSupported] = useState(false)
-
-  // Check if PWA install is supported
-  useEffect(() => {
-    setInstallSupported('BeforeInstallPromptEvent' in window)
-  }, [])
+  const [installSupported] = useState(
+    () => 'BeforeInstallPromptEvent' in window,
+  )
 
   const handleInstall = async () => {
     // The beforeinstallprompt event is captured in the service worker
@@ -39,8 +41,12 @@ export function SettingsScreen({ onBack, onImportArchive }: Props) {
         {/* Library */}
         <section className="settings-section">
           <h3 className="settings-section-title">Library</h3>
-          <button className="settings-item" onClick={onImportArchive}>
-            <span>Import Archive</span>
+          <button className="settings-item" onClick={onBackupLibrary}>
+            <span>Back Up Library</span>
+            <span className="settings-item-arrow">→</span>
+          </button>
+          <button className="settings-item" onClick={onRestoreLibrary}>
+            <span>Restore Library</span>
             <span className="settings-item-arrow">→</span>
           </button>
         </section>

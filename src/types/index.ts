@@ -93,16 +93,20 @@ export interface ArchiveBookEntry {
   syncKey: string
   source: BookSource
   sourceId: string
+  editionHash?: string
   title: string
   author: string
   filename: string // path within archive: books/<filename>.epub
   hasProgress: boolean
+  importedAt?: number
+  progressPercentage?: number
+  progressUpdatedAt?: number
 }
 
-// ============================================================
-// Export options
-// ============================================================
-
-export interface ExportOptions {
-  includeProgress: boolean
+export interface ArchiveProgressEntry {
+  syncKey: string
+  editionHash?: string
+  locator: string
+  percentage: number
+  updatedAt: number
 }

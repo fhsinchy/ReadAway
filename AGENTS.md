@@ -19,7 +19,6 @@ ReadAway is a private EPUB reader delivered as a Progressive Web App. It provide
 | Database | IndexedDB via Dexie |
 | PWA | vite-plugin-pwa |
 | Archive | fflate |
-| QR Scanning | html5-qrcode |
 | Crypto | Web Crypto API |
 
 ---

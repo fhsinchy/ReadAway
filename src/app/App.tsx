@@ -68,7 +68,6 @@ export function App() {
           <LibraryScreen
             onImportEpub={() => push({ name: 'import-epub' })}
             onOpenBook={(book) => push({ name: 'reader', book })}
-            onExport={() => push({ name: 'export-books' })}
             onSettings={() => push({ name: 'settings' })}
           />
         )
@@ -95,18 +94,18 @@ export function App() {
         return (
           <SettingsScreen
             onBack={pop}
-            onImportArchive={() => push({ name: 'import-archive' })}
+            onBackupLibrary={() => push({ name: 'backup-library' })}
+            onRestoreLibrary={() => push({ name: 'restore-library' })}
           />
         )
-      case 'export-books':
+      case 'backup-library':
         return <ExportBooksScreen onBack={pop} />
-      case 'import-archive':
+      case 'restore-library':
         return <ImportArchiveScreen onBack={pop} />
       default:
         return <LibraryScreen
           onImportEpub={() => push({ name: 'import-epub' })}
           onOpenBook={(book) => push({ name: 'reader', book })}
-          onExport={() => push({ name: 'export-books' })}
           onSettings={() => push({ name: 'settings' })}
         />
     }

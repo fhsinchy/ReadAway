@@ -6,5 +6,5 @@ export type Screen =
   | { name: 'reader'; book: Book }
   | { name: 'table-of-contents' }
   | { name: 'settings' }
-  | { name: 'export-books' }
-  | { name: 'import-archive' }
+  | { name: 'backup-library' }
+  | { name: 'restore-library' }

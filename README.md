@@ -15,7 +15,7 @@ ReadAway lets you import EPUBs from [Standard Ebooks](https://standardebooks.org
 - 🌗 Light, Dark, and Black themes
 - 🔤 Adjustable font size
 - 📑 Table of contents with chapter navigation
-- 📦 Export/import your library as `.raway` archives
+- 📦 Back up and restore your library as `.raway` archives
 - 📱 Install as a PWA for offline reading
 - 🔒 Fully private — everything stays on your device
 
