@@ -160,10 +160,16 @@ Features:
 * Table of contents
 * Chapter navigation
 * Adjustable font size
+* Single-column and two-column layout on eligible screens
 * Resume reading automatically
 
-The reader uses a fixed, comfortable single-column text width. User-adjustable
+The single-column reader uses a fixed, comfortable text width. User-adjustable
 margin controls are intentionally omitted for the MVP.
+
+Two-column layout is available only when the reader surface is at least 900 CSS
+pixels wide and the content area is at least 600 CSS pixels tall. If the user has
+selected two columns and the screen becomes ineligible, ReadAway temporarily
+renders single column without overwriting the saved preference.
 
 Progress is saved:
 

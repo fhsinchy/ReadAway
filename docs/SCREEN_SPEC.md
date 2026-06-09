@@ -310,6 +310,7 @@ Remember:
 * Reading position
 * Page color
 * Font size
+* Preferred layout
 
 Automatically save progress:
 
@@ -390,6 +391,24 @@ A [slider] A
 
 ---
 
+## Layout
+
+```text
+Single Column
+Two Columns
+```
+
+Two Columns is disabled when the reader surface is below 900 CSS px wide or the
+content area is below 600 CSS px tall.
+
+When disabled, show:
+
+```text
+Two columns are available on wider screens.
+```
+
+---
+
 ## Behavior
 
 Changes apply immediately.
@@ -397,6 +416,10 @@ Changes apply immediately.
 Reader position must not reset.
 
 Pagination should not unnecessarily restart.
+
+If the saved preferred layout is Two Columns but the current screen is
+ineligible, render Single Column temporarily and restore Two Columns when the
+screen becomes eligible again.
 
 Dismiss:
 

@@ -39,6 +39,10 @@
   z-index: 1;
 }
 
+.reader-layout-two .reader-viewer {
+  width: min(calc(100% - 24px), 1180px);
+}
+
 /* Controls */
 .reader-controls {
   position: absolute;
@@ -348,6 +352,18 @@
   margin-bottom: 10px;
 }
 
+.appearance-helper {
+  margin-top: 8px;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.reader-theme-dark .appearance-helper,
+.reader-theme-black .appearance-helper {
+  color: #aaa;
+}
+
 /* Theme options */
 .theme-options {
   display: flex;
@@ -486,6 +502,96 @@
   border: 2px solid #1c1c1e;
   border-radius: 50%;
   background: #faf8f2;
+}
+
+/* Layout options */
+.layout-options {
+  display: flex;
+  gap: 8px;
+}
+
+.layout-btn {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 2px solid #e0ddd4;
+  border-radius: 8px;
+  background: #fff;
+  color: #1c1c1e;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.layout-btn:hover:not(:disabled) {
+  border-color: #aaa;
+}
+
+.layout-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.layout-btn-active {
+  border-color: #1c1c1e;
+  background: #1c1c1e;
+  color: #faf8f2;
+}
+
+.reader-theme-dark .layout-btn,
+.reader-theme-black .layout-btn {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e5e5;
+}
+
+.reader-theme-dark .layout-btn-active,
+.reader-theme-black .layout-btn-active {
+  border-color: #e5e5e5;
+  background: #e5e5e5;
+  color: #1c1c1e;
+}
+
+.layout-btn-icon {
+  width: 60px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+}
+
+.layout-btn-line {
+  display: block;
+  height: 2px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.layout-btn-line-wide {
+  width: 42px;
+}
+
+.layout-btn-line-split {
+  width: 42px;
+  background:
+    linear-gradient(
+      to right,
+      currentColor 0 18px,
+      transparent 18px 24px,
+      currentColor 24px 42px
+    );
 }
 
 /* ============================================================

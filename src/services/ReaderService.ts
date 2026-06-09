@@ -7,7 +7,7 @@
  */
 
 import ePub, { type Book, type Rendition } from 'epubjs'
-import type { Book as LibraryBook, Theme } from '@/types'
+import type { Book as LibraryBook, ReaderLayout, Theme } from '@/types'
 import { db } from '@/db'
 import { getEpub } from './BookStorageService'
 
@@ -54,6 +54,10 @@ interface ReaderLocation {
       total?: number
     }
   }
+}
+
+type CfiAwareRendition = Rendition & {
+  resize(width: number, height: number, epubcfi?: string): void
 }
 
 export const PAGE_MAP_ALGORITHM_VERSION = 1
@@ -160,6 +164,7 @@ let state: ReaderState = {
 export async function openBook(
   storageKey: string,
   element: HTMLElement,
+  layout: ReaderLayout = 'single',
 ): Promise<{ book: Book; rendition: Rendition }> {
   // Retrieve EPUB bytes from browser-managed storage
   const epubBytes = await getEpub(storageKey)
@@ -183,17 +188,21 @@ export async function openBook(
   })
 
   console.log('[ReaderService] Opening book:', storageKey, 'size:', width, 'x', height)
+  const spread = layout === 'two' ? 'always' : 'none'
+  const minSpreadWidth =
+    layout === 'two' ? 1 : Number.POSITIVE_INFINITY
+
   const renditionOptions = {
     width,
     height,
-    spread: 'none',
-    minSpreadWidth: Number.POSITIVE_INFINITY,
+    spread,
+    minSpreadWidth,
     flow: 'paginated',
     allowScriptedContent: true,
   }
   const rendition = book.renderTo(element, renditionOptions)
   disableForcedBlankPages(rendition)
-  rendition.spread('none', Number.POSITIVE_INFINITY)
+  rendition.spread(spread, minSpreadWidth)
 
   // Normalize supported EPUB quirks before applying user themes.
   rendition.themes.default(READER_EPUB_NORMALIZATION_RULES)
@@ -478,6 +487,29 @@ export function applyTheme(rendition: Rendition, theme: Theme): void {
  */
 export function applyFontSize(rendition: Rendition, size: number): void {
   rendition.themes.fontSize(`${size}px`)
+}
+
+/**
+ * Apply single-column or two-column paginated layout to the rendition.
+ */
+export function applyReaderLayout(
+  rendition: Rendition,
+  layout: ReaderLayout,
+  width: number,
+  height: number,
+): void {
+  const location = rendition.currentLocation() as unknown as ReaderLocation | null
+  const cfi = location?.start?.cfi
+
+  if (layout === 'two') {
+    rendition.spread('always', 1)
+  } else {
+    rendition.spread('none', Number.POSITIVE_INFINITY)
+  }
+
+  disableForcedBlankPages(rendition)
+  const cfiAwareRendition = rendition as CfiAwareRendition
+  cfiAwareRendition.resize(width, height, cfi)
 }
 
 // ============================================================

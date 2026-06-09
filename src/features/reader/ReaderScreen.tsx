@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import type { CSSProperties, ChangeEvent } from 'react'
 import type { Book as EpubBook, Rendition } from 'epubjs'
-import type { Book, Theme } from '@/types'
+import type { Book, ReaderLayout, Theme } from '@/types'
 import {
   openBook,
   closeBook,
@@ -10,6 +10,7 @@ import {
   prevPage,
   applyTheme,
   applyFontSize,
+  applyReaderLayout,
   onLocationChange,
   getBookTitle,
   ensurePageMap,
@@ -28,11 +29,28 @@ interface Props {
 const MIN_FONT_SIZE = 12
 const MAX_FONT_SIZE = 28
 const FONT_SIZE_STEP = 1
+const TWO_COLUMN_MIN_WIDTH = 900
+const TWO_COLUMN_MIN_HEIGHT = 600
+const RESERVED_READER_CHROME_HEIGHT = 56 + 64 + 32
 const PAGE_COLOR_OPTIONS = [
   { key: 'light', label: 'Light', swatch: '#FAF8F2' },
   { key: 'dark', label: 'Dark', swatch: '#1C1C1E' },
   { key: 'black', label: 'Black', swatch: '#000000' },
 ] as const
+const LAYOUT_OPTIONS = [
+  { key: 'single', label: 'Single Column', icon: ['wide', 'wide', 'wide'] },
+  { key: 'two', label: 'Two Columns', icon: ['split', 'split', 'split'] },
+] as const
+
+function isTwoColumnEligible(width: number, height: number): boolean {
+  const contentHeight = height - RESERVED_READER_CHROME_HEIGHT
+  return width >= TWO_COLUMN_MIN_WIDTH && contentHeight >= TWO_COLUMN_MIN_HEIGHT
+}
+
+function getInitialTwoColumnEligibility(): boolean {
+  if (typeof window === 'undefined') return false
+  return isTwoColumnEligible(window.innerWidth, window.innerHeight)
+}
 
 function formatPagePosition(position: PagePosition): string {
   if (position.total) {
@@ -87,12 +105,24 @@ function isEditableKeyboardTarget(target: EventTarget | null): boolean {
 }
 
 export function ReaderScreen({ book, onBack }: Props) {
+  const readerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
   const renditionRef = useRef<Rendition | null>(null)
   const effectIdRef = useRef(0)
   const appearanceOpenRef = useRef(false)
   const tocOpenRef = useRef(false)
-  const { theme, setTheme, fontSize, setFontSize } = useTheme()
+  const {
+    theme,
+    setTheme,
+    fontSize,
+    setFontSize,
+    readerLayout,
+    setReaderLayout,
+  } = useTheme()
+  const [twoColumnEligible, setTwoColumnEligible] = useState(
+    getInitialTwoColumnEligibility,
+  )
+  const [renditionReadyId, setRenditionReadyId] = useState(0)
   const [controlsVisible, setControlsVisible] = useState(true)
   const [pagePosition, setPagePosition] = useState<PagePosition>({
     current: 1,
@@ -110,6 +140,31 @@ export function ReaderScreen({ book, onBack }: Props) {
     appearanceOpenRef.current = appearanceOpen
     tocOpenRef.current = tocOpen
   }, [appearanceOpen, tocOpen])
+
+  useLayoutEffect(() => {
+    const reader = readerRef.current
+    if (!reader) return
+
+    const updateEligibility = () => {
+      const rect = reader.getBoundingClientRect()
+      setTwoColumnEligible(isTwoColumnEligible(rect.width, rect.height))
+    }
+
+    updateEligibility()
+
+    const resizeObserver =
+      'ResizeObserver' in window ? new ResizeObserver(updateEligibility) : null
+    resizeObserver?.observe(reader)
+    window.addEventListener('resize', updateEligibility)
+
+    return () => {
+      resizeObserver?.disconnect()
+      window.removeEventListener('resize', updateEligibility)
+    }
+  }, [])
+
+  const effectiveLayout: ReaderLayout =
+    readerLayout === 'two' && twoColumnEligible ? 'two' : 'single'
 
   const handleKeyboardPageTurn = useCallback(
     (event: KeyboardEvent, preventDefault = false) => {
@@ -145,6 +200,7 @@ export function ReaderScreen({ book, onBack }: Props) {
         const { book: epubBook, rendition } = await openBook(
           book.storageKey,
           viewer,
+          effectiveLayout,
         )
         console.log('[ReaderScreen] Book opened successfully')
         if (effectId !== effectIdRef.current) {
@@ -192,6 +248,9 @@ export function ReaderScreen({ book, onBack }: Props) {
         if (!restored) {
           console.log('[ReaderScreen] Calling rendition.display()')
           await rendition.display()
+        }
+        if (effectId === effectIdRef.current) {
+          setRenditionReadyId((id) => id + 1)
         }
 
         // Get title
@@ -298,6 +357,27 @@ export function ReaderScreen({ book, onBack }: Props) {
     }
   }, [fontSize])
 
+  // Apply reader layout changes
+  useEffect(() => {
+    const rendition = renditionRef.current
+    const viewer = viewerRef.current
+    if (!rendition || !viewer) return
+
+    const frame = window.requestAnimationFrame(() => {
+      const rect = viewer.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) return
+
+      applyReaderLayout(rendition, effectiveLayout, rect.width, rect.height)
+      window.setTimeout(() => {
+        if (renditionRef.current === rendition) {
+          setPagePosition(getCurrentPagePosition(rendition))
+        }
+      }, 0)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [effectiveLayout, renditionReadyId])
+
   // Check for TOC chapter navigation target
   useEffect(() => {
     const target = sessionStorage.getItem('readaway-toc-target')
@@ -319,6 +399,14 @@ export function ReaderScreen({ book, onBack }: Props) {
       setFontSize(Number(event.target.value))
     },
     [setFontSize],
+  )
+
+  const handleLayoutChange = useCallback(
+    (layout: ReaderLayout) => {
+      if (layout === 'two' && !twoColumnEligible) return
+      setReaderLayout(layout)
+    },
+    [setReaderLayout, twoColumnEligible],
   )
 
   const handlePrev = useCallback(() => {
@@ -352,7 +440,10 @@ export function ReaderScreen({ book, onBack }: Props) {
   }, [])
 
   return (
-    <div className={`reader reader-theme-${theme}`}>
+    <div
+      ref={readerRef}
+      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout}`}
+    >
       {/* EPUB Viewer */}
       <div ref={viewerRef} className="reader-viewer" />
 
@@ -406,43 +497,43 @@ export function ReaderScreen({ book, onBack }: Props) {
         inert={!tocOpen}
         onClick={() => setTocOpen(false)}
       >
-          <aside
-            className="reader-drawer-panel reader-toc-panel"
-            aria-label="Contents"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <header className="reader-toc-header">
-              <div>
-                <h2>Contents</h2>
-                <p>{bookTitle}</p>
-              </div>
-              <button
-                className="btn-text reader-toc-close"
-                onClick={() => setTocOpen(false)}
-              >
-                ×
-              </button>
-            </header>
-
-            <div className="reader-toc-list">
-              {tocLoading ? (
-                <p className="reader-toc-message">Loading...</p>
-              ) : toc.length === 0 ? (
-                <p className="reader-toc-message">
-                  No table of contents available.
-                </p>
-              ) : (
-                toc.map((item, i) => (
-                  <ReaderTocItem
-                    key={item.id || `${item.href}-${i}`}
-                    item={item}
-                    onClick={handleTocItemClick}
-                  />
-                ))
-              )}
+        <aside
+          className="reader-drawer-panel reader-toc-panel"
+          aria-label="Contents"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <header className="reader-toc-header">
+            <div>
+              <h2>Contents</h2>
+              <p>{bookTitle}</p>
             </div>
-          </aside>
-        </div>
+            <button
+              className="btn-text reader-toc-close"
+              onClick={() => setTocOpen(false)}
+            >
+              ×
+            </button>
+          </header>
+
+          <div className="reader-toc-list">
+            {tocLoading ? (
+              <p className="reader-toc-message">Loading...</p>
+            ) : toc.length === 0 ? (
+              <p className="reader-toc-message">
+                No table of contents available.
+              </p>
+            ) : (
+              toc.map((item, i) => (
+                <ReaderTocItem
+                  key={item.id || `${item.href}-${i}`}
+                  item={item}
+                  onClick={handleTocItemClick}
+                />
+              ))
+            )}
+          </div>
+        </aside>
+      </div>
 
       {/* Appearance panel */}
       <div
@@ -512,6 +603,39 @@ export function ReaderScreen({ book, onBack }: Props) {
                   A
                 </span>
               </div>
+            </div>
+
+            {/* Layout */}
+            <div className="appearance-section">
+              <h4>Layout</h4>
+              <div className="layout-options">
+                {LAYOUT_OPTIONS.map((option) => {
+                  const disabled = option.key === 'two' && !twoColumnEligible
+                  return (
+                    <button
+                      key={option.key}
+                      className={`layout-btn ${effectiveLayout === option.key ? 'layout-btn-active' : ''}`}
+                      disabled={disabled}
+                      onClick={() => handleLayoutChange(option.key)}
+                    >
+                      <span className="layout-btn-icon" aria-hidden="true">
+                        {option.icon.map((line, i) => (
+                          <span
+                            key={`${option.key}-${line}-${i}`}
+                            className={`layout-btn-line layout-btn-line-${line}`}
+                          />
+                        ))}
+                      </span>
+                      <span>{option.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              {!twoColumnEligible && (
+                <p className="appearance-helper">
+                  Two columns are available on wider screens.
+                </p>
+              )}
             </div>
           </div>
         </aside>

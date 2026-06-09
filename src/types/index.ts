@@ -48,6 +48,7 @@ export interface PageMap {
 // ============================================================
 
 export type Theme = 'light' | 'dark' | 'black'
+export type ReaderLayout = 'single' | 'two'
 export type AppThemeSetting = 'system' | 'light' | 'dark'
 export type AppResolvedTheme = 'light' | 'dark'
 

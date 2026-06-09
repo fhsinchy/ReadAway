@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { Theme } from '@/types'
+import type { ReaderLayout, Theme } from '@/types'
 
 const THEME_STORAGE_KEY = 'readaway-theme'
 const FONT_SIZE_STORAGE_KEY = 'readaway-font-size'
+const READER_LAYOUT_STORAGE_KEY = 'readaway-reader-layout'
 
 const DEFAULT_FONT_SIZE = 16
+const DEFAULT_READER_LAYOUT: ReaderLayout = 'single'
 
 export function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light'
@@ -27,6 +29,12 @@ export function useTheme() {
     return stored ? parseInt(stored, 10) : DEFAULT_FONT_SIZE
   })
 
+  const [readerLayout, setReaderLayoutState] = useState<ReaderLayout>(() => {
+    const stored = localStorage.getItem(READER_LAYOUT_STORAGE_KEY)
+    if (stored === 'single' || stored === 'two') return stored
+    return DEFAULT_READER_LAYOUT
+  })
+
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     localStorage.setItem(THEME_STORAGE_KEY, t)
@@ -38,6 +46,11 @@ export function useTheme() {
     localStorage.setItem(FONT_SIZE_STORAGE_KEY, String(clamped))
   }, [])
 
+  const setReaderLayout = useCallback((layout: ReaderLayout) => {
+    setReaderLayoutState(layout)
+    localStorage.setItem(READER_LAYOUT_STORAGE_KEY, layout)
+  }, [])
+
   useEffect(() => {
     document.documentElement.style.setProperty(
       '--reader-font-size',
@@ -45,5 +58,12 @@ export function useTheme() {
     )
   }, [fontSize])
 
-  return { theme, setTheme, fontSize, setFontSize }
+  return {
+    theme,
+    setTheme,
+    fontSize,
+    setFontSize,
+    readerLayout,
+    setReaderLayout,
+  }
 }

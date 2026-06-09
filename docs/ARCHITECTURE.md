@@ -304,6 +304,7 @@ Responsibilities:
 * Retrieve table of contents
 * Apply page colors
 * Apply font size
+* Apply reader layout
 
 ---
 
