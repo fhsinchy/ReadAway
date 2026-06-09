@@ -13,20 +13,44 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'icons.svg',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+      ],
       manifest: {
         name: 'ReadAway',
         short_name: 'ReadAway',
         description: 'Own your books. Own your progress.',
+        scope: '/',
+        start_url: '/',
         theme_color: '#1C1C1E',
         background_color: '#FAF8F2',
         display: 'standalone',
+        display_override: ['standalone', 'minimal-ui', 'browser'],
         orientation: 'any',
         icons: [
           {
-            src: 'favicon.svg',
+            src: '/favicon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
+            purpose: 'any',
+          },
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
             purpose: 'any maskable',
           },
         ],
