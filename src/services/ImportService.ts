@@ -204,13 +204,26 @@ function parseMetadata(opfXml: string): EpubMetadata {
   )
   if (coverMatch) {
     const coverId = coverMatch[1]
+    // Attribute order varies — match either id-before-href or href-before-id
+    const escapedId = escapeRegExp(coverId)
     const itemMatch = opfXml.match(
       new RegExp(
-        `<item[^>]*id="${escapeRegExp(coverId)}"[^>]*href="([^"]*)"[^>]*\\/?>`,
+        `<item[^>]*id="${escapedId}"[^>]*href="([^"]*)"` +
+          `|<item[^>]*href="([^"]*)"[^>]*id="${escapedId}"`,
         'i',
       ),
     )
-    if (itemMatch) coverHref = itemMatch[1]
+    if (itemMatch) {
+      coverHref = itemMatch[1] || itemMatch[2]
+    }
+  }
+
+  // Fallback: look for item with properties="cover-image"
+  if (!coverHref) {
+    const propMatch = opfXml.match(
+      /<item[^>]*properties="[^"]*cover-image[^"]*"[^>]*href="([^"]*)"/i,
+    )
+    if (propMatch) coverHref = propMatch[1]
   }
 
   return {
