@@ -269,6 +269,16 @@ Right:
 Next Page
 ```
 
+Horizontal swipe:
+
+```text
+Swipe left: Next Page
+Swipe right: Previous Page
+```
+
+Swipe gestures must ignore mostly vertical movement and must not run while
+reader panels are open.
+
 ---
 
 ## Reader Controls
@@ -284,6 +294,7 @@ Back
 
 Book Title
 
+Full Screen
 Table of Contents
 Appearance
 ```
@@ -311,6 +322,7 @@ Remember:
 * Page color
 * Font size
 * Preferred layout
+* Page turn animation preference
 
 Automatically save progress:
 
@@ -398,13 +410,21 @@ Single Column
 Two Columns
 ```
 
-Two Columns is disabled when the reader surface is below 900 CSS px wide or the
-content area is below 600 CSS px tall.
+Two Columns is disabled when the reader surface is below 840 CSS px wide or
+480 CSS px tall.
 
 When disabled, show:
 
 ```text
-Two columns are available on wider screens.
+Two columns are available on larger screens.
+```
+
+---
+
+## Page Turn
+
+```text
+Slide Animation [toggle]
 ```
 
 ---

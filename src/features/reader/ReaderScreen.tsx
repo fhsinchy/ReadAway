@@ -7,7 +7,6 @@ import {
   closeBook,
   saveProgress,
   restoreProgress,
-  prevPage,
   applyTheme,
   applyFontSize,
   applyReaderLayout,
@@ -29,9 +28,11 @@ interface Props {
 const MIN_FONT_SIZE = 12
 const MAX_FONT_SIZE = 28
 const FONT_SIZE_STEP = 1
-const TWO_COLUMN_MIN_WIDTH = 900
-const TWO_COLUMN_MIN_HEIGHT = 600
-const RESERVED_READER_CHROME_HEIGHT = 56 + 64 + 32
+const PAGE_TURN_ANIMATION_MS = 260
+const SWIPE_MIN_DISTANCE = 50
+const SWIPE_AXIS_RATIO = 1.5
+const TWO_COLUMN_MIN_WIDTH = 840
+const TWO_COLUMN_MIN_HEIGHT = 480
 const PAGE_COLOR_OPTIONS = [
   { key: 'light', label: 'Light', swatch: '#FAF8F2' },
   { key: 'dark', label: 'Dark', swatch: '#1C1C1E' },
@@ -43,13 +44,62 @@ const LAYOUT_OPTIONS = [
 ] as const
 
 function isTwoColumnEligible(width: number, height: number): boolean {
-  const contentHeight = height - RESERVED_READER_CHROME_HEIGHT
-  return width >= TWO_COLUMN_MIN_WIDTH && contentHeight >= TWO_COLUMN_MIN_HEIGHT
+  return width >= TWO_COLUMN_MIN_WIDTH && height >= TWO_COLUMN_MIN_HEIGHT
 }
 
 function getInitialTwoColumnEligibility(): boolean {
   if (typeof window === 'undefined') return false
   return isTwoColumnEligible(window.innerWidth, window.innerHeight)
+}
+
+function shouldReduceMotion(): boolean {
+  if (typeof window === 'undefined') return true
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+type FullscreenCapableElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void
+}
+
+type FullscreenCapableDocument = Document & {
+  webkitExitFullscreen?: () => Promise<void> | void
+  webkitFullscreenElement?: Element | null
+  webkitFullscreenEnabled?: boolean
+}
+
+function getFullscreenElement(): Element | null {
+  const fullscreenDocument = document as FullscreenCapableDocument
+  return document.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement ?? null
+}
+
+function isFullscreenSupported(element: HTMLElement | null): boolean {
+  if (!element) return false
+  const fullscreenElement = element as FullscreenCapableElement
+  const fullscreenDocument = document as FullscreenCapableDocument
+
+  return (
+    document.fullscreenEnabled === true ||
+    fullscreenDocument.webkitFullscreenEnabled === true ||
+    typeof fullscreenElement.webkitRequestFullscreen === 'function'
+  )
+}
+
+async function requestReaderFullscreen(element: HTMLElement): Promise<void> {
+  const fullscreenElement = element as FullscreenCapableElement
+  if (element.requestFullscreen) {
+    await element.requestFullscreen()
+    return
+  }
+  await fullscreenElement.webkitRequestFullscreen?.()
+}
+
+async function exitReaderFullscreen(): Promise<void> {
+  const fullscreenDocument = document as FullscreenCapableDocument
+  if (document.exitFullscreen) {
+    await document.exitFullscreen()
+    return
+  }
+  await fullscreenDocument.webkitExitFullscreen?.()
 }
 
 function formatPagePosition(position: PagePosition): string {
@@ -104,6 +154,12 @@ function isEditableKeyboardTarget(target: EventTarget | null): boolean {
   )
 }
 
+function getTouchPoint(event: TouchEvent): { x: number; y: number } | null {
+  const touch = event.changedTouches[0] ?? event.touches[0]
+  if (!touch) return null
+  return { x: touch.clientX, y: touch.clientY }
+}
+
 export function ReaderScreen({ book, onBack }: Props) {
   const readerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<HTMLDivElement>(null)
@@ -111,6 +167,9 @@ export function ReaderScreen({ book, onBack }: Props) {
   const effectIdRef = useRef(0)
   const appearanceOpenRef = useRef(false)
   const tocOpenRef = useRef(false)
+  const pageTurnInFlightRef = useRef(false)
+  const pageTurnTimeoutRef = useRef<number | null>(null)
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
   const {
     theme,
     setTheme,
@@ -118,11 +177,16 @@ export function ReaderScreen({ book, onBack }: Props) {
     setFontSize,
     readerLayout,
     setReaderLayout,
+    pageTurnAnimation,
+    setPageTurnAnimation,
   } = useTheme()
   const [twoColumnEligible, setTwoColumnEligible] = useState(
     getInitialTwoColumnEligibility,
   )
   const [renditionReadyId, setRenditionReadyId] = useState(0)
+  const [pageTurnDirection, setPageTurnDirection] = useState<
+    'next' | 'prev' | null
+  >(null)
   const [controlsVisible, setControlsVisible] = useState(true)
   const [pagePosition, setPagePosition] = useState<PagePosition>({
     current: 1,
@@ -135,6 +199,8 @@ export function ReaderScreen({ book, onBack }: Props) {
   const [toc, setToc] = useState<TocItem[]>([])
   const [tocLoading, setTocLoading] = useState(false)
   const [tocLoaded, setTocLoaded] = useState(false)
+  const [fullscreenSupported, setFullscreenSupported] = useState(false)
+  const [fullscreenActive, setFullscreenActive] = useState(false)
 
   useEffect(() => {
     appearanceOpenRef.current = appearanceOpen
@@ -163,8 +229,64 @@ export function ReaderScreen({ book, onBack }: Props) {
     }
   }, [])
 
+  useEffect(() => {
+    const reader = readerRef.current
+    if (!reader) return
+
+    const updateFullscreenState = () => {
+      setFullscreenSupported(isFullscreenSupported(reader))
+      setFullscreenActive(getFullscreenElement() === reader)
+    }
+
+    updateFullscreenState()
+    document.addEventListener('fullscreenchange', updateFullscreenState)
+    document.addEventListener('webkitfullscreenchange', updateFullscreenState)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', updateFullscreenState)
+      document.removeEventListener(
+        'webkitfullscreenchange',
+        updateFullscreenState,
+      )
+    }
+  }, [])
+
   const effectiveLayout: ReaderLayout =
     readerLayout === 'two' && twoColumnEligible ? 'two' : 'single'
+
+  const navigatePage = useCallback(
+    (direction: 'next' | 'prev') => {
+      const rendition = renditionRef.current
+      if (!rendition || pageTurnInFlightRef.current) return
+
+      const turnPage = () =>
+        direction === 'prev' ? rendition.prev() : rendition.next()
+
+      if (!pageTurnAnimation || shouldReduceMotion()) {
+        turnPage()
+        return
+      }
+
+      pageTurnInFlightRef.current = true
+      setPageTurnDirection(null)
+
+      window.requestAnimationFrame(() => {
+        setPageTurnDirection(direction)
+      })
+
+      turnPage().finally(() => {
+        if (pageTurnTimeoutRef.current !== null) {
+          window.clearTimeout(pageTurnTimeoutRef.current)
+        }
+        pageTurnTimeoutRef.current = window.setTimeout(() => {
+          setPageTurnDirection(null)
+          pageTurnInFlightRef.current = false
+          pageTurnTimeoutRef.current = null
+        }, PAGE_TURN_ANIMATION_MS)
+      })
+    },
+    [pageTurnAnimation],
+  )
 
   const handleKeyboardPageTurn = useCallback(
     (event: KeyboardEvent, preventDefault = false) => {
@@ -177,14 +299,62 @@ export function ReaderScreen({ book, onBack }: Props) {
         event.preventDefault()
       }
 
-      if (event.key === 'ArrowLeft') {
-        if (renditionRef.current) prevPage(renditionRef.current)
-      } else if (renditionRef.current) {
-        renditionRef.current.next()
-      }
+      navigatePage(event.key === 'ArrowLeft' ? 'prev' : 'next')
     },
-    [],
+    [navigatePage],
   )
+
+  const handleSwipeStart = useCallback((event: TouchEvent) => {
+    if (appearanceOpenRef.current || tocOpenRef.current) return
+    swipeStartRef.current = getTouchPoint(event)
+  }, [])
+
+  const handleSwipeEnd = useCallback(
+    (event: TouchEvent) => {
+      if (appearanceOpenRef.current || tocOpenRef.current) return
+
+      const start = swipeStartRef.current
+      swipeStartRef.current = null
+      if (!start) return
+
+      const end = getTouchPoint(event)
+      if (!end) return
+
+      const deltaX = end.x - start.x
+      const deltaY = end.y - start.y
+      const absX = Math.abs(deltaX)
+      const absY = Math.abs(deltaY)
+
+      if (absX < SWIPE_MIN_DISTANCE || absX < absY * SWIPE_AXIS_RATIO) {
+        return
+      }
+
+      event.preventDefault()
+      navigatePage(deltaX < 0 ? 'next' : 'prev')
+    },
+    [navigatePage],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (pageTurnTimeoutRef.current !== null) {
+        window.clearTimeout(pageTurnTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+
+    viewer.addEventListener('touchstart', handleSwipeStart, { passive: true })
+    viewer.addEventListener('touchend', handleSwipeEnd, { passive: false })
+
+    return () => {
+      viewer.removeEventListener('touchstart', handleSwipeStart)
+      viewer.removeEventListener('touchend', handleSwipeEnd)
+    }
+  }, [handleSwipeEnd, handleSwipeStart])
 
   // Initialize reader
   useEffect(() => {
@@ -240,6 +410,12 @@ export function ReaderScreen({ book, onBack }: Props) {
         })
         rendition.on('keydown', (event: KeyboardEvent) => {
           handleKeyboardPageTurn(event)
+        })
+        rendition.on('touchstart', (event: TouchEvent) => {
+          handleSwipeStart(event)
+        })
+        rendition.on('touchend', (event: TouchEvent) => {
+          handleSwipeEnd(event)
         })
 
         // Restore progress or show the first readable section
@@ -410,12 +586,12 @@ export function ReaderScreen({ book, onBack }: Props) {
   )
 
   const handlePrev = useCallback(() => {
-    if (renditionRef.current) prevPage(renditionRef.current)
-  }, [])
+    navigatePage('prev')
+  }, [navigatePage])
 
   const handleNext = useCallback(() => {
-    if (renditionRef.current) renditionRef.current.next()
-  }, [])
+    navigatePage('next')
+  }, [navigatePage])
 
   const handleOpenToc = useCallback(() => {
     if (!tocLoaded) {
@@ -430,6 +606,20 @@ export function ReaderScreen({ book, onBack }: Props) {
     setAppearanceOpen(true)
   }, [])
 
+  const handleToggleFullscreen = useCallback(() => {
+    const reader = readerRef.current
+    if (!reader) return
+
+    const action =
+      getFullscreenElement() === reader
+        ? exitReaderFullscreen()
+        : requestReaderFullscreen(reader)
+
+    action.catch((err: unknown) => {
+      console.debug('[ReaderScreen] Fullscreen request failed:', err)
+    })
+  }, [])
+
   const handleTocItemClick = useCallback((href: string) => {
     if (!renditionRef.current) return
 
@@ -442,7 +632,7 @@ export function ReaderScreen({ book, onBack }: Props) {
   return (
     <div
       ref={readerRef}
-      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout}`}
+      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout} ${pageTurnDirection ? `reader-page-turn-${pageTurnDirection}` : ''}`}
     >
       {/* EPUB Viewer */}
       <div ref={viewerRef} className="reader-viewer" />
@@ -458,6 +648,14 @@ export function ReaderScreen({ book, onBack }: Props) {
           </button>
           <span className="reader-book-title">{bookTitle}</span>
           <div className="reader-topbar-actions">
+            {fullscreenSupported && (
+              <button
+                className="btn-text reader-fullscreen"
+                onClick={handleToggleFullscreen}
+              >
+                {fullscreenActive ? 'Exit Full Screen' : 'Full Screen'}
+              </button>
+            )}
             <button className="btn-text" onClick={handleOpenToc}>
               Contents
             </button>
@@ -633,9 +831,26 @@ export function ReaderScreen({ book, onBack }: Props) {
               </div>
               {!twoColumnEligible && (
                 <p className="appearance-helper">
-                  Two columns are available on wider screens.
+                  Two columns are available on larger screens.
                 </p>
               )}
+            </div>
+
+            {/* Page Turn */}
+            <div className="appearance-section">
+              <h4>Page Turn</h4>
+              <div className="page-turn-setting">
+                <span>Slide Animation</span>
+                <button
+                  className={`page-turn-toggle ${pageTurnAnimation ? 'page-turn-toggle-active' : ''}`}
+                  type="button"
+                  aria-label="Slide page turn animation"
+                  aria-pressed={pageTurnAnimation}
+                  onClick={() => setPageTurnAnimation(!pageTurnAnimation)}
+                >
+                  <span />
+                </button>
+              </div>
             </div>
           </div>
         </aside>
