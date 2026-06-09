@@ -26,6 +26,7 @@ export interface ReaderState {
   book: Book | null
   rendition: Rendition | null
   element: HTMLElement | null
+  onResize: (() => void) | null
 }
 
 // ============================================================
@@ -36,6 +37,7 @@ let state: ReaderState = {
   book: null,
   rendition: null,
   element: null,
+  onResize: null,
 }
 
 // ============================================================
@@ -53,14 +55,12 @@ export async function openBook(
   // Clean up any existing book
   closeBook()
 
-  // Retrieve EPUB bytes and create a blob URL
+  // Retrieve EPUB bytes from browser-managed storage
   const epubBytes = await getEpub(storageKey)
+
   if (!epubBytes) {
     throw new Error(`EPUB not found in storage: ${storageKey}`)
   }
-
-  const blob = new Blob([epubBytes], { type: 'application/epub+zip' })
-  const url = URL.createObjectURL(blob)
 
   // Measure the container for actual pixel dimensions.
   // epub.js parseFloat('100%') = 100, not the container size.
@@ -68,9 +68,8 @@ export async function openBook(
   const width = rect.width || window.innerWidth
   const height = rect.height || window.innerHeight
 
-  // Load with epub.js — blob URLs have no .epub extension,
-  // so we must explicitly tell epub.js to open as an EPUB archive
-  const book = ePub(url, { openAs: 'epub' })
+  // Load the stored EPUB bytes directly so epub.js opens it as an archive.
+  const book = ePub(epubBytes)
 
   // Log any loading errors
   book.opened.catch((err: Error) => {
@@ -106,8 +105,6 @@ export async function openBook(
   })
   rendition.themes.select('light')
 
-  state = { book, rendition, element }
-
   // Handle window resize
   const onResize = () => {
     const r = element.getBoundingClientRect()
@@ -116,6 +113,8 @@ export async function openBook(
     }
   }
   window.addEventListener('resize', onResize)
+
+  state = { book, rendition, element, onResize }
 
   return { book, rendition }
 }
@@ -137,7 +136,7 @@ export async function restoreProgress(
 
   try {
     // epub.js uses EPUB CFI locators
-    rendition.display(progress.locator)
+    await rendition.display(progress.locator)
     return true
   } catch {
     return false
@@ -239,8 +238,10 @@ export function onLocationChange(
   rendition: Rendition,
   callback: (locator: string, percentage: number) => void,
 ): void {
-  rendition.on('relocated', (location: any) => {
-    const start = location?.start as { cfi: string; percentage: number } | undefined
+  rendition.on('relocated', (location: unknown) => {
+    const start = (location as {
+      start?: { cfi?: string; percentage?: number }
+    } | null)?.start
     if (start?.cfi) {
       callback(start.cfi, Math.round((start.percentage || 0) * 100))
     }
@@ -251,14 +252,25 @@ export function onLocationChange(
  * Clean up the current book and rendition.
  */
 export function closeBook(): void {
-  if (state.rendition) {
+  if (state.onResize) {
+    window.removeEventListener('resize', state.onResize)
+  }
+
+  if (state.book) {
+    try {
+      state.book.destroy()
+    } catch {
+      // Ignore errors during cleanup
+    }
+  } else if (state.rendition) {
     try {
       state.rendition.destroy()
     } catch {
       // Ignore errors during cleanup
     }
   }
-  state = { book: null, rendition: null, element: null }
+
+  state = { book: null, rendition: null, element: null, onResize: null }
 }
 
 /**

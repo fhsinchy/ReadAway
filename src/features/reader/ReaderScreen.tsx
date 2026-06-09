@@ -24,18 +24,19 @@ interface Props {
 export function ReaderScreen({ book, onBack, onToc }: Props) {
   const viewerRef = useRef<HTMLDivElement>(null)
   const renditionRef = useRef<Rendition | null>(null)
+  const effectIdRef = useRef(0)
+  const { theme, setTheme, fontSize, setFontSize } = useTheme()
   const [controlsVisible, setControlsVisible] = useState(true)
   const [percentage, setPercentage] = useState(0)
   const [bookTitle, setBookTitle] = useState(book.title)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
-  const { theme, setTheme, fontSize, setFontSize } = useTheme()
 
   // Initialize reader
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
 
-    let cancelled = false
+    const effectId = ++effectIdRef.current
 
     async function init() {
       if (!viewer) return
@@ -43,24 +44,15 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
       try {
         const { rendition } = await openBook(book.storageKey, viewer)
         console.log('[ReaderScreen] Book opened successfully')
-        if (cancelled) return
-        renditionRef.current = rendition
-
-        // Restore progress
-        const restored = await restoreProgress(rendition, book.syncKey)
-        console.log('[ReaderScreen] Progress restored:', restored)
-        if (!restored) {
-          console.log('[ReaderScreen] Calling rendition.display()')
-          rendition.display()
+        if (effectId !== effectIdRef.current) {
+          closeBook()
+          return
         }
+        renditionRef.current = rendition
 
         // Apply saved appearance
         applyTheme(rendition, theme)
         applyFontSize(rendition, fontSize)
-
-        // Get title
-        const title = await getBookTitle()
-        if (!cancelled) setBookTitle(title || book.title)
 
         // Save progress on page change
         onLocationChange(rendition, (_locator, pct) => {
@@ -68,14 +60,19 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
         })
 
         // Log rendering events
-        rendition.on('rendered', (section: any) => {
-          console.log('[ReaderScreen] Section rendered:', section?.href)
+        rendition.on('rendered', (section: unknown) => {
+          const href = (section as { href?: string } | null)?.href
+          console.log('[ReaderScreen] Section rendered:', href)
         })
-        rendition.on('displayed', (section: any) => {
-          console.log('[ReaderScreen] Section displayed:', section?.href)
+        rendition.on('displayed', (section: unknown) => {
+          const href = (section as { href?: string } | null)?.href
+          console.log('[ReaderScreen] Section displayed:', href)
         })
-        rendition.on('renderError', (err: any) => {
+        rendition.on('renderError', (err: unknown) => {
           console.error('[ReaderScreen] Render error:', err)
+        })
+        rendition.on('displayError', (err: unknown) => {
+          console.error('[ReaderScreen] Display error:', err)
         })
 
         // Handle clicks inside the epub.js iframe for tap zones
@@ -96,6 +93,18 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
             setControlsVisible((v) => !v)
           }
         })
+
+        // Restore progress or show the first readable section
+        const restored = await restoreProgress(rendition, book.syncKey)
+        console.log('[ReaderScreen] Progress restored:', restored)
+        if (!restored) {
+          console.log('[ReaderScreen] Calling rendition.display()')
+          await rendition.display()
+        }
+
+        // Get title
+        const title = await getBookTitle()
+        if (effectId === effectIdRef.current) setBookTitle(title || book.title)
       } catch (err) {
         console.error('Failed to open book:', err)
       }
@@ -104,9 +113,15 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
     init()
 
     return () => {
-      cancelled = true
-      closeBook()
+      renditionRef.current = null
+      // This cleanup intentionally skips closing a newer reader effect.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      if (effectId === effectIdRef.current) {
+        closeBook()
+      }
     }
+    // Appearance changes are applied by the dedicated effects below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book.storageKey, book.syncKey, book.title])
 
   // Save progress on page change
