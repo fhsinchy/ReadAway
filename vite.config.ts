@@ -16,6 +16,7 @@ export default defineConfig({
       includeAssets: [
         'favicon.svg',
         'icons.svg',
+        'pwa-icon.svg',
         'pwa-192x192.png',
         'pwa-512x512.png',
       ],
@@ -32,7 +33,7 @@ export default defineConfig({
         orientation: 'any',
         icons: [
           {
-            src: '/favicon.svg',
+            src: '/pwa-icon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any',

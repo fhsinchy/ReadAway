@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { AppResolvedTheme, AppThemeSetting } from '@/types'
+import type { PwaInstallControls } from '@/hooks/usePwaInstall'
 import './SettingsScreen.css'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   appTheme: AppThemeSetting
   resolvedAppTheme: AppResolvedTheme
   onAppThemeChange: (theme: AppThemeSetting) => void
+  pwaInstall: PwaInstallControls
 }
 
 const APP_THEME_OPTIONS = [
@@ -24,14 +26,16 @@ export function SettingsScreen({
   appTheme,
   resolvedAppTheme,
   onAppThemeChange,
+  pwaInstall,
 }: Props) {
-  const [installSupported] = useState(
-    () => 'BeforeInstallPromptEvent' in window,
-  )
+  const [installSupported] = useState(() => 'onbeforeinstallprompt' in window)
 
   const handleInstall = async () => {
-    // The beforeinstallprompt event is captured in the service worker
-    // We can trigger it by dispatching an event or showing instructions
+    if (pwaInstall.isInstallable) {
+      await pwaInstall.triggerInstallPrompt()
+      return
+    }
+
     alert(
       'To install ReadAway, use your browser\'s "Add to Home Screen" or "Install" option.',
     )
@@ -89,7 +93,7 @@ export function SettingsScreen({
         </section>
 
         {/* Install */}
-        {installSupported && (
+        {installSupported && !pwaInstall.isInstalled && (
           <section className="settings-section">
             <h3 className="settings-section-title">Install</h3>
             <button className="settings-item" onClick={handleInstall}>

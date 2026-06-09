@@ -8,12 +8,14 @@ import { TableOfContentsScreen } from '@/features/reader/TableOfContentsScreen'
 import { SettingsScreen } from '@/features/settings/SettingsScreen'
 import { ExportBooksScreen } from '@/features/export-library/ExportBooksScreen'
 import { useAppTheme } from '@/hooks/useAppTheme'
+import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { db } from '@/db'
 
 const ACTIVE_BOOK_KEY = 'readaway-active-book'
 
 export function App() {
   const { appTheme, resolvedAppTheme, setAppTheme } = useAppTheme()
+  const pwaInstall = usePwaInstall()
   const [screenStack, setScreenStack] = useState<Screen[]>(() => {
     // Restore reader screen on refresh
     const saved = sessionStorage.getItem(ACTIVE_BOOK_KEY)
@@ -71,6 +73,7 @@ export function App() {
             onImportEpub={() => push({ name: 'import-epub' })}
             onOpenBook={(book) => push({ name: 'reader', book })}
             onSettings={() => push({ name: 'settings' })}
+            pwaInstall={pwaInstall}
           />
         )
       case 'import-epub':
@@ -101,6 +104,7 @@ export function App() {
             appTheme={appTheme}
             resolvedAppTheme={resolvedAppTheme}
             onAppThemeChange={setAppTheme}
+            pwaInstall={pwaInstall}
           />
         )
       case 'backup-library':
@@ -112,6 +116,7 @@ export function App() {
           onImportEpub={() => push({ name: 'import-epub' })}
           onOpenBook={(book) => push({ name: 'reader', book })}
           onSettings={() => push({ name: 'settings' })}
+          pwaInstall={pwaInstall}
         />
     }
   }

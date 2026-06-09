@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Book } from '@/types'
 import { useBooks } from '@/hooks/useBooks'
-import { usePwaInstall } from '@/hooks/usePwaInstall'
+import type { PwaInstallControls } from '@/hooks/usePwaInstall'
 import { db } from '@/db'
 import './LibraryScreen.css'
 
@@ -9,16 +9,18 @@ interface Props {
   onImportEpub: () => void
   onOpenBook: (book: Book) => void
   onSettings: () => void
+  pwaInstall: PwaInstallControls
 }
 
 export function LibraryScreen({
   onImportEpub,
   onOpenBook,
   onSettings,
+  pwaInstall,
 }: Props) {
   const { books, loading } = useBooks()
   const { showPrompt, showInstallPrompt, dismissPrompt, triggerInstallPrompt, isInstallable } =
-    usePwaInstall()
+    pwaInstall
   const [booksWithProgress, setBooksWithProgress] = useState<
     (Book & { progress?: number; lastReadAt?: number })[]
   >([])
