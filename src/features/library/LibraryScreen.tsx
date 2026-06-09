@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Book } from '@/types'
 import { useBooks } from '@/hooks/useBooks'
+import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { db } from '@/db'
 import './LibraryScreen.css'
 
@@ -18,6 +19,8 @@ export function LibraryScreen({
   onSettings,
 }: Props) {
   const { books, loading } = useBooks()
+  const { showPrompt, showInstallPrompt, dismissPrompt, triggerInstallPrompt, isInstallable } =
+    usePwaInstall()
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [booksWithProgress, setBooksWithProgress] = useState<
@@ -37,6 +40,14 @@ export function LibraryScreen({
     }
     load()
   }, [books])
+
+  // Show install prompt after library loads
+  useEffect(() => {
+    if (!loading && isInstallable) {
+      const timer = setTimeout(() => showInstallPrompt(), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, isInstallable, showInstallPrompt])
 
   const toggleSelection = useCallback((syncKey: string) => {
     setSelectedKeys((prev) => {
@@ -116,6 +127,26 @@ export function LibraryScreen({
           <button className="btn-text" onClick={exitSelectionMode}>
             Cancel
           </button>
+        </div>
+      )}
+
+      {/* PWA Install Prompt */}
+      {showPrompt && (
+        <div className="install-banner">
+          <div className="install-banner-content">
+            <h3>Install ReadAway</h3>
+            <p>
+              Read books offline and access ReadAway from your home screen.
+            </p>
+          </div>
+          <div className="install-banner-actions">
+            <button className="btn-primary" onClick={triggerInstallPrompt}>
+              Install
+            </button>
+            <button className="btn-text" onClick={dismissPrompt}>
+              Not Now
+            </button>
+          </div>
         </div>
       )}
 

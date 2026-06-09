@@ -205,6 +205,41 @@
   text-align: right;
 }
 
+/* Install banner */
+
+.install-banner {
+  margin: 12px 16px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e0ddd4;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.install-banner-content h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin-bottom: 2px;
+}
+
+.install-banner-content p {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
+}
+
+.install-banner-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 /* Empty state */
 
 .library-empty {
