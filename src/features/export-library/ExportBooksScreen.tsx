@@ -117,14 +117,14 @@ export function ExportBooksScreen({ onBack }: Props) {
 
       {phase === 'exporting' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <p style={{ color: '#888' }}>Creating backup...</p>
+          <p style={{ color: 'var(--app-text-subtle)' }}>Creating backup...</p>
         </div>
       )}
 
       {phase === 'done' && (
         <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
           <h2>Backup created successfully.</h2>
-          <p style={{ color: '#666', marginTop: 8 }}>
+          <p style={{ color: 'var(--app-text-muted)', marginTop: 8 }}>
             Your browser's save dialog should appear shortly.
           </p>
           <button className="btn-primary" onClick={onBack} style={{ marginTop: 16 }}>

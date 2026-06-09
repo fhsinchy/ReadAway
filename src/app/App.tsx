@@ -7,11 +7,13 @@ import { ReaderScreen } from '@/features/reader/ReaderScreen'
 import { TableOfContentsScreen } from '@/features/reader/TableOfContentsScreen'
 import { SettingsScreen } from '@/features/settings/SettingsScreen'
 import { ExportBooksScreen } from '@/features/export-library/ExportBooksScreen'
+import { useAppTheme } from '@/hooks/useAppTheme'
 import { db } from '@/db'
 
 const ACTIVE_BOOK_KEY = 'readaway-active-book'
 
 export function App() {
+  const { appTheme, resolvedAppTheme, setAppTheme } = useAppTheme()
   const [screenStack, setScreenStack] = useState<Screen[]>(() => {
     // Restore reader screen on refresh
     const saved = sessionStorage.getItem(ACTIVE_BOOK_KEY)
@@ -96,6 +98,9 @@ export function App() {
             onBack={pop}
             onBackupLibrary={() => push({ name: 'backup-library' })}
             onRestoreLibrary={() => push({ name: 'restore-library' })}
+            appTheme={appTheme}
+            resolvedAppTheme={resolvedAppTheme}
+            onAppThemeChange={setAppTheme}
           />
         )
       case 'backup-library':
@@ -111,5 +116,13 @@ export function App() {
     }
   }
 
-  return <div style={{ height: '100dvh' }}>{renderScreen()}</div>
+  return (
+    <div
+      className="app-shell"
+      data-app-theme={resolvedAppTheme}
+      style={{ height: '100dvh' }}
+    >
+      {renderScreen()}
+    </div>
+  )
 }

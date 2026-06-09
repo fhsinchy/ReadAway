@@ -416,6 +416,13 @@ Minimal application settings.
 
 ## Layout
 
+Appearance
+
+```text
+App Theme
+System / Light / Dark
+```
+
 Library
 
 ```text id="jlwmpt"

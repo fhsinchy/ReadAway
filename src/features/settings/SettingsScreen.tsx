@@ -1,16 +1,29 @@
 import { useState } from 'react'
+import type { AppResolvedTheme, AppThemeSetting } from '@/types'
 import './SettingsScreen.css'
 
 interface Props {
   onBack: () => void
   onBackupLibrary: () => void
   onRestoreLibrary: () => void
+  appTheme: AppThemeSetting
+  resolvedAppTheme: AppResolvedTheme
+  onAppThemeChange: (theme: AppThemeSetting) => void
 }
+
+const APP_THEME_OPTIONS = [
+  { key: 'system', label: 'System' },
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
+] as const
 
 export function SettingsScreen({
   onBack,
   onBackupLibrary,
   onRestoreLibrary,
+  appTheme,
+  resolvedAppTheme,
+  onAppThemeChange,
 }: Props) {
   const [installSupported] = useState(
     () => 'BeforeInstallPromptEvent' in window,
@@ -35,6 +48,33 @@ export function SettingsScreen({
       </header>
 
       <div className="settings-content">
+        {/* Appearance */}
+        <section className="settings-section">
+          <h3 className="settings-section-title">Appearance</h3>
+          <div className="settings-item settings-item-stacked settings-item-static">
+            <div className="settings-item-heading">
+              <span>App Theme</span>
+              <span className="settings-item-value">
+                {resolvedAppTheme === 'dark' ? 'Dark' : 'Light'}
+              </span>
+            </div>
+            <div className="settings-segmented" role="radiogroup">
+              {APP_THEME_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  className={`settings-segment ${appTheme === option.key ? 'settings-segment-active' : ''}`}
+                  type="button"
+                  role="radio"
+                  aria-checked={appTheme === option.key}
+                  onClick={() => onAppThemeChange(option.key)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Library */}
         <section className="settings-section">
           <h3 className="settings-section-title">Library</h3>

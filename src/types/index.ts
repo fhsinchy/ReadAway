@@ -48,6 +48,8 @@ export interface PageMap {
 // ============================================================
 
 export type Theme = 'light' | 'dark' | 'black'
+export type AppThemeSetting = 'system' | 'light' | 'dark'
+export type AppResolvedTheme = 'light' | 'dark'
 
 export const THEME_VALUES: Record<Theme, { bg: string; label: string }> = {
   light: { bg: '#FAF8F2', label: 'Light' },

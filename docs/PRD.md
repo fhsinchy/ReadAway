@@ -175,6 +175,8 @@ Progress is saved:
 
 # Page Colors
 
+Reader page color is separate from the application theme.
+
 Three page colors:
 
 ## Light
@@ -209,6 +211,25 @@ Default behavior:
 * System Dark → Dark
 
 Black is manually selected.
+
+---
+
+# App Theme
+
+The application shell supports:
+
+* System
+* Light
+* Dark
+
+Default behavior:
+
+* App theme defaults to System.
+* System Light resolves to Light.
+* System Dark resolves to Dark.
+
+The app theme applies to library, settings, backup, restore, and import screens.
+It does not override the reader page color.
 
 ---
 
