@@ -50,7 +50,7 @@ Settings
 
 # Screen Inventory
 
-ReadAway MVP contains exactly seven screens and one sheet.
+ReadAway MVP contains exactly seven screens and two reader panels.
 
 Screens:
 
@@ -62,9 +62,10 @@ Screens:
 6. Back Up Library
 7. Restore Library
 
-Sheet:
+Reader panels:
 
-8. Appearance Sheet
+8. Table of Contents Panel
+9. Appearance Panel
 
 No additional screens should be introduced without updating this document.
 
@@ -307,7 +308,7 @@ Next
 Remember:
 
 * Reading position
-* Theme
+* Page color
 * Font size
 
 Automatically save progress:
@@ -318,7 +319,7 @@ Automatically save progress:
 
 ---
 
-# 4. Table of Contents Screen
+# 4. Table of Contents Panel
 
 Purpose:
 
@@ -334,6 +335,14 @@ Book Title
 Chapter List
 ```
 
+Presentation:
+
+Right-side panel.
+
+Not a separate screen.
+
+Opening and closing must animate smoothly.
+
 ---
 
 ## Interaction
@@ -347,7 +356,7 @@ Return to Reader
 
 ---
 
-# 5. Appearance Sheet
+# 5. Appearance Panel
 
 Purpose:
 
@@ -355,13 +364,15 @@ Adjust reading appearance.
 
 Presentation:
 
-Bottom sheet.
+Right-side panel.
 
 Not a separate screen.
 
+Opening and closing must animate smoothly.
+
 ---
 
-## Theme Selection
+## Page Color Selection
 
 ```text id="jlwmmt"
 ○ Light
@@ -374,7 +385,7 @@ Not a separate screen.
 ## Font Size
 
 ```text id="jlwmnt"
-[-] 16 [+]
+A [slider] A
 ```
 
 ---
@@ -390,7 +401,6 @@ Pagination should not unnecessarily restart.
 Dismiss:
 
 ```text id="jlwmot"
-Swipe down
 Tap outside
 ```
 
@@ -412,8 +422,6 @@ Library
 Back Up Library
 Restore Library
 ```
-
-Appearance
 
 ```text id="jlwmqt"
 Install ReadAway

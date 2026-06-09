@@ -28,8 +28,13 @@
 /* EPUB Viewer */
 .reader-viewer {
   position: absolute;
-  inset: var(--reader-topbar-height) 0
-    calc(var(--reader-bottombar-height) + var(--reader-page-bottom-gutter)) 0;
+  top: var(--reader-topbar-height);
+  bottom: calc(
+    var(--reader-bottombar-height) + var(--reader-page-bottom-gutter)
+  );
+  left: 50%;
+  width: min(calc(100% - 32px), 760px);
+  transform: translateX(-50%);
   overflow: hidden;
   z-index: 1;
 }
@@ -177,19 +182,27 @@
 }
 
 /* ============================================================
-   Reader Table of Contents Panel
+   Reader Drawers
    ============================================================ */
 
-.reader-toc-overlay {
+.reader-drawer-overlay {
   position: fixed;
   inset: 0;
   z-index: 80;
   display: flex;
   justify-content: flex-end;
   background: rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
 }
 
-.reader-toc-panel {
+.reader-drawer-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.reader-drawer-panel {
   width: min(420px, calc(100vw - 24px));
   height: calc(100% - 24px);
   margin: 12px;
@@ -200,10 +213,16 @@
   border-radius: 8px;
   background: #faf8f2;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  transform: translateX(calc(100% + 24px));
+  transition: transform 0.24s ease;
 }
 
-.reader-theme-dark .reader-toc-panel,
-.reader-theme-black .reader-toc-panel {
+.reader-drawer-open .reader-drawer-panel {
+  transform: translateX(0);
+}
+
+.reader-theme-dark .reader-drawer-panel,
+.reader-theme-black .reader-drawer-panel {
   border-color: rgba(255, 255, 255, 0.12);
   background: #1c1c1e;
 }
@@ -289,53 +308,23 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 640px) {
-  .reader-toc-overlay {
-    justify-content: center;
-    align-items: flex-end;
-  }
-
-  .reader-toc-panel {
-    width: 100%;
-    height: min(78dvh, 620px);
-    margin: 0;
-    border-right: 0;
-    border-bottom: 0;
-    border-left: 0;
-    border-radius: 8px 8px 0 0;
-  }
-}
-
 /* ============================================================
-   Appearance Sheet (bottom sheet)
+   Appearance Panel
    ============================================================ */
 
 .appearance-overlay {
-  position: fixed;
-  inset: 0;
   background: rgba(0, 0, 0, 0.3);
   z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 }
 
-.appearance-sheet {
-  width: 100%;
-  max-width: 480px;
-  background: #faf8f2;
-  border-radius: 16px 16px 0 0;
-  padding: 24px 16px 32px;
-  animation: slideUp 0.25s ease;
+.appearance-panel {
+  width: min(360px, calc(100vw - 24px));
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+.appearance-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
 }
 
 .appearance-title {
@@ -347,7 +336,7 @@
 }
 
 .appearance-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .appearance-section h4 {
@@ -367,9 +356,13 @@
 
 .theme-btn {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   padding: 12px;
   border: 2px solid #e0ddd4;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -388,25 +381,111 @@
   color: #faf8f2;
 }
 
+.theme-btn-swatch {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
 /* Font size control */
-.font-size-control {
+.font-size-slider-control {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  gap: 12px;
+  min-height: 44px;
 }
 
-.font-size-value {
-  font-size: 18px;
+.font-size-slider-label {
   font-weight: 600;
-  min-width: 40px;
   text-align: center;
   color: #1c1c1e;
+  line-height: 1;
 }
 
-.appearance-close {
-  width: 100%;
-  margin-top: 8px;
+.reader-theme-dark .font-size-slider-label,
+.reader-theme-black .font-size-slider-label {
+  color: #e5e5e5;
+}
+
+.font-size-slider-label-small {
+  font-size: 14px;
+}
+
+.font-size-slider-label-large {
+  font-size: 24px;
+}
+
+.font-size-slider {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.reader-theme-dark .font-size-slider,
+.reader-theme-black .font-size-slider {
+  color: #e5e5e5;
+}
+
+.font-size-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      to right,
+      #1c1c1e 0 var(--font-size-progress),
+      #d8d4ca var(--font-size-progress) 100%
+    );
+}
+
+.reader-theme-dark .font-size-slider::-webkit-slider-runnable-track,
+.reader-theme-black .font-size-slider::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(
+      to right,
+      #e5e5e5 0 var(--font-size-progress),
+      rgba(255, 255, 255, 0.28) var(--font-size-progress) 100%
+    );
+}
+
+.font-size-slider::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  appearance: none;
+  border: 2px solid #1c1c1e;
+  border-radius: 50%;
+  background: #faf8f2;
+}
+
+.reader-theme-dark .font-size-slider::-webkit-slider-thumb,
+.reader-theme-black .font-size-slider::-webkit-slider-thumb {
+  border-color: #e5e5e5;
+  background: #1c1c1e;
+}
+
+.font-size-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #d8d4ca;
+}
+
+.font-size-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: #1c1c1e;
+}
+
+.font-size-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #1c1c1e;
+  border-radius: 50%;
+  background: #faf8f2;
 }
 
 /* ============================================================

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import type { CSSProperties, ChangeEvent } from 'react'
 import type { Book as EpubBook, Rendition } from 'epubjs'
 import type { Book, Theme } from '@/types'
 import {
@@ -24,6 +25,15 @@ interface Props {
   onBack: () => void
 }
 
+const MIN_FONT_SIZE = 12
+const MAX_FONT_SIZE = 28
+const FONT_SIZE_STEP = 1
+const PAGE_COLOR_OPTIONS = [
+  { key: 'light', label: 'Light', swatch: '#FAF8F2' },
+  { key: 'dark', label: 'Dark', swatch: '#1C1C1E' },
+  { key: 'black', label: 'Black', swatch: '#000000' },
+] as const
+
 function formatPagePosition(position: PagePosition): string {
   if (position.total) {
     if (position.end && position.end > position.current) {
@@ -32,6 +42,15 @@ function formatPagePosition(position: PagePosition): string {
     return `Page ${position.current} of ${position.total}`
   }
   return `Page ${position.current}`
+}
+
+function getFontSizeSliderStyle(fontSize: number): CSSProperties {
+  const progress =
+    ((fontSize - MIN_FONT_SIZE) / (MAX_FONT_SIZE - MIN_FONT_SIZE)) * 100
+
+  return {
+    '--font-size-progress': `${progress}%`,
+  } as CSSProperties
 }
 
 function formatChapterPagesLeft(position: PagePosition): string {
@@ -295,13 +314,12 @@ export function ReaderScreen({ book, onBack }: Props) {
     [setTheme],
   )
 
-  const handleFontSizeDecrease = useCallback(() => {
-    setFontSize(fontSize - 1)
-  }, [fontSize, setFontSize])
-
-  const handleFontSizeIncrease = useCallback(() => {
-    setFontSize(fontSize + 1)
-  }, [fontSize, setFontSize])
+  const handleFontSizeChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setFontSize(Number(event.target.value))
+    },
+    [setFontSize],
+  )
 
   const handlePrev = useCallback(() => {
     if (renditionRef.current) prevPage(renditionRef.current)
@@ -315,8 +333,14 @@ export function ReaderScreen({ book, onBack }: Props) {
     if (!tocLoaded) {
       setTocLoading(true)
     }
+    setAppearanceOpen(false)
     setTocOpen(true)
   }, [tocLoaded])
+
+  const handleOpenAppearance = useCallback(() => {
+    setTocOpen(false)
+    setAppearanceOpen(true)
+  }, [])
 
   const handleTocItemClick = useCallback((href: string) => {
     if (!renditionRef.current) return
@@ -348,7 +372,7 @@ export function ReaderScreen({ book, onBack }: Props) {
             </button>
             <button
               className="btn-text"
-              onClick={() => setAppearanceOpen(!appearanceOpen)}
+              onClick={handleOpenAppearance}
             >
               Aa
             </button>
@@ -376,10 +400,14 @@ export function ReaderScreen({ book, onBack }: Props) {
         </div>
       </div>
 
-      {tocOpen && (
-        <div className="reader-toc-overlay" onClick={() => setTocOpen(false)}>
+      <div
+        className={`reader-drawer-overlay reader-toc-overlay ${tocOpen ? 'reader-drawer-open' : ''}`}
+        aria-hidden={!tocOpen}
+        inert={!tocOpen}
+        onClick={() => setTocOpen(false)}
+      >
           <aside
-            className="reader-toc-panel"
+            className="reader-drawer-panel reader-toc-panel"
             aria-label="Contents"
             onClick={(e) => e.stopPropagation()}
           >
@@ -415,37 +443,48 @@ export function ReaderScreen({ book, onBack }: Props) {
             </div>
           </aside>
         </div>
-      )}
 
-      {/* Appearance sheet */}
-      {appearanceOpen && (
-        <div
-          className="appearance-overlay"
-          onClick={() => setAppearanceOpen(false)}
+      {/* Appearance panel */}
+      <div
+        className={`reader-drawer-overlay appearance-overlay ${appearanceOpen ? 'reader-drawer-open' : ''}`}
+        aria-hidden={!appearanceOpen}
+        inert={!appearanceOpen}
+        onClick={() => setAppearanceOpen(false)}
+      >
+        <aside
+          className="reader-drawer-panel appearance-panel"
+          aria-label="Appearance"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className="appearance-sheet"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="appearance-title">Appearance</h3>
+          <header className="reader-toc-header">
+            <div>
+              <h2>Appearance</h2>
+              <p>{bookTitle}</p>
+            </div>
+            <button
+              className="btn-text reader-toc-close"
+              onClick={() => setAppearanceOpen(false)}
+            >
+              ×
+            </button>
+          </header>
 
-            {/* Theme */}
+          <div className="appearance-panel-content">
+            {/* Page Color */}
             <div className="appearance-section">
-              <h4>Theme</h4>
+              <h4>Page Color</h4>
               <div className="theme-options">
-                {(
-                  [
-                    { key: 'light', label: 'Light' },
-                    { key: 'dark', label: 'Dark' },
-                    { key: 'black', label: 'Black' },
-                  ] as const
-                ).map(({ key, label }) => (
+                {PAGE_COLOR_OPTIONS.map(({ key, label, swatch }) => (
                   <button
                     key={key}
                     className={`theme-btn ${theme === key ? 'theme-btn-active' : ''}`}
                     onClick={() => handleThemeChange(key)}
                   >
-                    {label}
+                    <span
+                      className="theme-btn-swatch"
+                      style={{ backgroundColor: swatch }}
+                    />
+                    <span>{label}</span>
                   </button>
                 ))}
               </div>
@@ -454,26 +493,29 @@ export function ReaderScreen({ book, onBack }: Props) {
             {/* Font Size */}
             <div className="appearance-section">
               <h4>Font Size</h4>
-              <div className="font-size-control">
-                <button className="btn-text" onClick={handleFontSizeDecrease}>
-                  −
-                </button>
-                <span className="font-size-value">{fontSize}</span>
-                <button className="btn-text" onClick={handleFontSizeIncrease}>
-                  +
-                </button>
+              <div className="font-size-slider-control">
+                <span className="font-size-slider-label font-size-slider-label-small">
+                  A
+                </span>
+                <input
+                  className="font-size-slider"
+                  type="range"
+                  min={MIN_FONT_SIZE}
+                  max={MAX_FONT_SIZE}
+                  step={FONT_SIZE_STEP}
+                  value={fontSize}
+                  style={getFontSizeSliderStyle(fontSize)}
+                  aria-label="Font size"
+                  onChange={handleFontSizeChange}
+                />
+                <span className="font-size-slider-label font-size-slider-label-large">
+                  A
+                </span>
               </div>
             </div>
-
-            <button
-              className="btn-primary appearance-close"
-              onClick={() => setAppearanceOpen(false)}
-            >
-              Done
-            </button>
           </div>
-        </div>
-      )}
+        </aside>
+      </div>
     </div>
   )
 }

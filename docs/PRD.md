@@ -162,6 +162,9 @@ Features:
 * Adjustable font size
 * Resume reading automatically
 
+The reader uses a fixed, comfortable single-column text width. User-adjustable
+margin controls are intentionally omitted for the MVP.
+
 Progress is saved:
 
 * On page changes
@@ -170,9 +173,9 @@ Progress is saved:
 
 ---
 
-# Themes
+# Page Colors
 
-Three themes:
+Three page colors:
 
 ## Light
 
@@ -198,7 +201,7 @@ Pure black.
 #000000
 ```
 
-Theme selection is remembered.
+Page color selection is remembered.
 
 Default behavior:
 

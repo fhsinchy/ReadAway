@@ -302,7 +302,7 @@ Responsibilities:
 * Calculate pages left in current EPUB section/chapter
 * Navigate chapters
 * Retrieve table of contents
-* Apply themes
+* Apply page colors
 * Apply font size
 
 ---
@@ -356,6 +356,7 @@ Responsibilities:
 * Interface with epub.js
 * Persist reading progress
 * Restore reading progress
+* Apply reader appearance settings
 
 ---
 
