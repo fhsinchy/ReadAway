@@ -25,7 +25,6 @@
 .reader-viewer {
   flex: 1;
   overflow: hidden;
-  cursor: pointer;
   z-index: 1;
 }
 

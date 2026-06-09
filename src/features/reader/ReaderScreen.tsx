@@ -62,6 +62,25 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
         onLocationChange(rendition, (_locator, pct) => {
           setPercentage(pct)
         })
+
+        // Handle clicks inside the epub.js iframe for tap zones
+        rendition.on('click', (e: MouseEvent) => {
+          if (!viewer) return
+          const rect = viewer.getBoundingClientRect()
+          const x = e.clientX - rect.left
+          const width = rect.width
+
+          if (x < width * 0.3) {
+            // Left zone: previous page
+            prevPage(rendition)
+          } else if (x > width * 0.7) {
+            // Right zone: next page
+            rendition.next()
+          } else {
+            // Center: toggle controls
+            setControlsVisible((v) => !v)
+          }
+        })
       } catch (err) {
         console.error('Failed to open book:', err)
       }
@@ -129,28 +148,6 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
       renditionRef.current.display(target)
     }
   })
-  const handleViewerClick = useCallback(
-    (e: React.MouseEvent) => {
-      const viewer = viewerRef.current
-      if (!viewer) return
-
-      const rect = viewer.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const width = rect.width
-
-      // Determine tap zone
-      const zone = x < width * 0.3 ? 'left' : x > width * 0.7 ? 'right' : 'center'
-
-      if (zone === 'left') {
-        if (renditionRef.current) prevPage(renditionRef.current)
-      } else if (zone === 'right') {
-        if (renditionRef.current) renditionRef.current.next()
-      } else {
-        setControlsVisible((v) => !v)
-      }
-    },
-    [],
-  )
 
   const handleThemeChange = useCallback(
     (t: Theme) => {
@@ -178,7 +175,7 @@ export function ReaderScreen({ book, onBack, onToc }: Props) {
   return (
     <div className={`reader reader-theme-${theme}`}>
       {/* EPUB Viewer */}
-      <div ref={viewerRef} className="reader-viewer" onClick={handleViewerClick} />
+      <div ref={viewerRef} className="reader-viewer" />
 
       {/* Controls */}
       <div
