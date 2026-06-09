@@ -50,6 +50,9 @@ export interface EpubMetadata {
   language: string
   coverHref: string | null
   publisher: string
+  identifier: string
+  source: string
+  rights: string
 }
 
 // ============================================================

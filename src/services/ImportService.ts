@@ -45,7 +45,7 @@ export async function importEpub(file: File): Promise<ImportResult> {
   }
 
   // 4. Validate source
-  const source = detectSource(meta.publisher)
+  const source = detectSource(meta, opfXml)
   if (!source) {
     return { success: false, error: 'unsupported_source' }
   }
@@ -88,23 +88,49 @@ export async function importEpub(file: File): Promise<ImportResult> {
 // Source detection
 // ============================================================
 
-const STANDARDEBOOKS_PATTERNS = [
-  /standard\s*ebooks/i,
-  /standardebooks/i,
-]
+/**
+ * Detect the book source by checking multiple OPF metadata fields.
+ * Order: publisher → identifier → source → rights → full OPF scan
+ */
+function detectSource(meta: EpubMetadata, opfXml: string): BookSource | null {
+  // Combine all searchable text
+  const fields = [
+    meta.publisher,
+    meta.identifier,
+    meta.source,
+    meta.rights,
+  ].filter(Boolean)
 
-const GUTENBERG_PATTERNS = [
-  /project\s*gutenberg/i,
-  /gutenberg/i,
-]
+  const combined = fields.join(' ')
 
-function detectSource(publisher: string): BookSource | null {
-  for (const pattern of STANDARDEBOOKS_PATTERNS) {
-    if (pattern.test(publisher)) return 'standardebooks'
+  // Check for Standard Ebooks first (more specific patterns)
+  if (
+    /standard\s*ebooks/i.test(combined) ||
+    /standardebooks\.org/i.test(combined)
+  ) {
+    return 'standardebooks'
   }
-  for (const pattern of GUTENBERG_PATTERNS) {
-    if (pattern.test(publisher)) return 'gutenberg'
+
+  // Check for Project Gutenberg
+  if (
+    /project\s*gutenberg/i.test(combined) ||
+    /gutenberg\.org/i.test(combined) ||
+    /gutenberg\.net/i.test(combined) ||
+    /pg\d{3,6}/i.test(combined)
+  ) {
+    return 'gutenberg'
   }
+
+  // Fallback: scan the full OPF for gutenberg.org URLs
+  if (/gutenberg\.org/i.test(opfXml)) {
+    return 'gutenberg'
+  }
+
+  // Fallback: scan the full OPF for standardebooks.org URLs
+  if (/standardebooks\.org/i.test(opfXml)) {
+    return 'standardebooks'
+  }
+
   return null
 }
 
@@ -167,6 +193,9 @@ function parseMetadata(opfXml: string): EpubMetadata {
   const author = getTag('creator')
   const language = getTag('language')
   const publisher = getTag('publisher')
+  const identifier = getTag('identifier')
+  const source = getTag('source')
+  const rights = getTag('rights')
 
   // Find cover image reference
   let coverHref: string | null = null
@@ -190,6 +219,9 @@ function parseMetadata(opfXml: string): EpubMetadata {
     language: language || 'en',
     coverHref,
     publisher,
+    identifier,
+    source,
+    rights,
   }
 }
 
@@ -219,12 +251,20 @@ function extractSourceId(opfXml: string, source: BookSource): string {
   }
 
   if (source === 'gutenberg') {
-    // Project Gutenberg: ebook number in identifier like "10007" or "pg10007"
+    // Project Gutenberg: ebook number embedded in identifier or source URL
+    // Patterns: http://www.gutenberg.org/10007, pg10007, or just 10007
+    
+    // Try extracting number from gutenberg.org/ebooks/NNNN or gutenberg.org/NNNN
+    const urlMatch = opfXml.match(/gutenberg\.org\/(?:ebooks\/)?(\d+)/i)
+    if (urlMatch) return urlMatch[1]
+
+    // Try pgNNNNN pattern
     const pgMatch = opfXml.match(/pg(\d+)/i)
     if (pgMatch) return pgMatch[1]
 
+    // Fallback: any numeric identifier as last resort
     const idMatch = opfXml.match(
-      /<dc:identifier[^>]*>(\d+)<\/dc:identifier>/i,
+      /<dc:identifier[^>]*>[^<]*(\d{4,})[^<]*<\/dc:identifier>/i,
     )
     if (idMatch) return idMatch[1]
 
