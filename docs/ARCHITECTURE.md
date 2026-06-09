@@ -253,6 +253,23 @@ percentage
 updatedAt
 ```
 
+## Page Maps
+
+```text
+key
+syncKey
+editionHash
+
+algorithmVersion
+charsPerPage
+locations
+
+createdAt
+updatedAt
+```
+
+`locations` stores the serialized epub.js location map for stable synthetic page numbers.
+
 No additional tables without updating this document.
 
 ---

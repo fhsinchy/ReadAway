@@ -7,7 +7,7 @@
  */
 
 import ePub, { type Book, type Rendition } from 'epubjs'
-import type { Theme } from '@/types'
+import type { Book as LibraryBook, Theme } from '@/types'
 import { db } from '@/db'
 import { getEpub } from './BookStorageService'
 
@@ -30,6 +30,12 @@ export interface ReaderState {
   resizeObserver: ResizeObserver | null
 }
 
+export interface PagePosition {
+  current: number
+  end?: number
+  total: number | null
+}
+
 interface ReaderLocation {
   start?: {
     cfi?: string
@@ -40,6 +46,84 @@ interface ReaderLocation {
       total?: number
     }
   }
+  end?: {
+    cfi?: string
+    displayed?: {
+      page?: number
+      total?: number
+    }
+  }
+}
+
+export const PAGE_MAP_ALGORITHM_VERSION = 1
+export const SYNTHETIC_PAGE_CHARS = 2000
+
+const STANDARD_EBOOKS_HIDDEN_LABEL_SELECTOR = [
+  'section.epub-type-contains-word-titlepage h1',
+  'section.epub-type-contains-word-titlepage p',
+  'section.epub-type-contains-word-colophon h2',
+  'section.epub-type-contains-word-imprint h2',
+].join(', ')
+
+const STANDARD_EBOOKS_BLACK_TRANSPARENT_IMAGE_SELECTOR =
+  'img.epub-type-contains-word-se-image-color-depth-black-on-transparent'
+
+const READER_EPUB_NORMALIZATION_RULES: object = [
+  [
+    STANDARD_EBOOKS_HIDDEN_LABEL_SELECTOR,
+    ['position', 'absolute', true],
+    ['left', '0', true],
+    ['top', '0', true],
+    ['width', '1px', true],
+    ['height', '1px', true],
+    ['overflow', 'hidden', true],
+    ['clip', 'rect(0 0 0 0)', true],
+    ['clip-path', 'inset(50%)', true],
+    ['white-space', 'nowrap', true],
+    ['margin', '0', true],
+    ['padding', '0', true],
+    ['border', '0', true],
+  ],
+  [
+    'section.epub-type-contains-word-titlepage img',
+    ['display', 'block', true],
+    ['width', 'min(72%, 560px)', true],
+    ['height', 'auto', true],
+    ['max-width', '100%', true],
+    ['max-height', 'calc(100vh - 6em)', true],
+    ['object-fit', 'contain', true],
+  ],
+]
+
+function pageMapKey(book: LibraryBook): string {
+  return [
+    book.syncKey,
+    book.editionHash,
+    `stable-pages-v${PAGE_MAP_ALGORITHM_VERSION}`,
+    `chars-${SYNTHETIC_PAGE_CHARS}`,
+  ].join('|')
+}
+
+function disableForcedBlankPages(rendition: Rendition): void {
+  const manager = (
+    rendition as unknown as {
+      manager?: {
+        viewSettings?: {
+          forceEvenPages?: boolean
+        }
+      }
+    }
+  ).manager
+
+  if (manager?.viewSettings) {
+    manager.viewSettings.forceEvenPages = false
+  }
+}
+
+function pageFromCfi(rendition: Rendition, cfi: string, total: number): number {
+  const location = Number(rendition.book.locations.locationFromCfi(cfi))
+  const page = Number.isFinite(location) ? location + 1 : 1
+  return Math.max(1, Math.min(total, page))
 }
 
 // ============================================================
@@ -91,30 +175,46 @@ export async function openBook(
   })
 
   console.log('[ReaderService] Opening book:', storageKey, 'size:', width, 'x', height)
-  const rendition = book.renderTo(element, {
+  const renditionOptions = {
     width,
     height,
     spread: 'none',
+    minSpreadWidth: Number.POSITIVE_INFINITY,
     flow: 'paginated',
-  })
+  }
+  const rendition = book.renderTo(element, renditionOptions)
+  disableForcedBlankPages(rendition)
+  rendition.spread('none', Number.POSITIVE_INFINITY)
+
+  // Normalize supported EPUB quirks before applying user themes.
+  rendition.themes.default(READER_EPUB_NORMALIZATION_RULES)
 
   // Apply default theme
   rendition.themes.register('light', {
-    body: {
+    'body.light': {
       background: '#FAF8F2',
       color: '#1C1C1E',
     },
+    [`body.light ${STANDARD_EBOOKS_BLACK_TRANSPARENT_IMAGE_SELECTOR}`]: {
+      filter: 'none',
+    },
   })
   rendition.themes.register('dark', {
-    body: {
+    'body.dark': {
       background: '#1C1C1E',
       color: '#E5E5E5',
     },
+    [`body.dark ${STANDARD_EBOOKS_BLACK_TRANSPARENT_IMAGE_SELECTOR}`]: {
+      filter: 'invert(100%)',
+    },
   })
   rendition.themes.register('black', {
-    body: {
+    'body.black': {
       background: '#000000',
       color: '#CCCCCC',
+    },
+    [`body.black ${STANDARD_EBOOKS_BLACK_TRANSPARENT_IMAGE_SELECTOR}`]: {
+      filter: 'invert(100%)',
     },
   })
   rendition.themes.select('light')
@@ -163,13 +263,69 @@ export async function restoreProgress(
 }
 
 /**
- * Generate CFI locations so whole-book percentage can be calculated.
+ * Load or generate the stable synthetic page map for a book.
  */
-export async function generateLocations(book: Book): Promise<void> {
-  if (book.locations.length() > 0) return
+export async function ensurePageMap(
+  epubBook: Book,
+  libraryBook: LibraryBook,
+): Promise<void> {
+  if (epubBook.locations.length() > 0) return
 
-  await book.ready
-  await book.locations.generate(1600)
+  await epubBook.ready
+
+  const key = pageMapKey(libraryBook)
+  const cached = await db.pageMaps.get(key)
+  if (
+    cached &&
+    cached.algorithmVersion === PAGE_MAP_ALGORITHM_VERSION &&
+    cached.charsPerPage === SYNTHETIC_PAGE_CHARS
+  ) {
+    epubBook.locations.load(cached.locations)
+    return
+  }
+
+  await epubBook.locations.generate(SYNTHETIC_PAGE_CHARS)
+
+  const now = Date.now()
+  await db.pageMaps.put({
+    key,
+    syncKey: libraryBook.syncKey,
+    editionHash: libraryBook.editionHash,
+    algorithmVersion: PAGE_MAP_ALGORITHM_VERSION,
+    charsPerPage: SYNTHETIC_PAGE_CHARS,
+    locations: epubBook.locations.save(),
+    createdAt: cached?.createdAt ?? now,
+    updatedAt: now,
+  })
+}
+
+/**
+ * Get a whole-book page-like position from generated CFI locations.
+ */
+export function getCurrentPagePosition(rendition: Rendition): PagePosition {
+  try {
+    const location = rendition.currentLocation() as unknown as ReaderLocation | null
+    const cfi = location?.start?.cfi
+    const endCfi = location?.end?.cfi
+    const total = rendition.book.locations.length()
+
+    if (cfi && total > 0) {
+      const current = pageFromCfi(rendition, cfi, total)
+      const end = endCfi ? pageFromCfi(rendition, endCfi, total) : current
+      return {
+        current,
+        end: Math.max(current, end),
+        total,
+      }
+    }
+
+    return {
+      current: Math.max(1, location?.start?.displayed?.page ?? 1),
+      total: null,
+    }
+  } catch {
+    return { current: 1, total: null }
+  }
 }
 
 function getSpineItemCount(book: Book): number {
@@ -312,14 +468,22 @@ export function applyFontSize(rendition: Rendition, size: number): void {
  */
 export function onLocationChange(
   rendition: Rendition,
-  callback: (locator: string, percentage: number) => void,
+  callback: (
+    locator: string,
+    percentage: number,
+    pagePosition: PagePosition,
+  ) => void,
 ): void {
   rendition.on('relocated', (location: unknown) => {
     const start = (location as {
       start?: { cfi?: string; percentage?: number }
     } | null)?.start
     if (start?.cfi) {
-      callback(start.cfi, getCurrentPercentage(rendition))
+      callback(
+        start.cfi,
+        getCurrentPercentage(rendition),
+        getCurrentPagePosition(rendition),
+      )
     }
   })
 }

@@ -29,6 +29,21 @@ export interface Progress {
 }
 
 // ============================================================
+// Stable page maps
+// ============================================================
+
+export interface PageMap {
+  key: string
+  syncKey: string
+  editionHash: string
+  algorithmVersion: number
+  charsPerPage: number
+  locations: string
+  createdAt: number
+  updatedAt: number
+}
+
+// ============================================================
 // Themes
 // ============================================================
 

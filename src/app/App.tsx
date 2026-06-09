@@ -51,7 +51,6 @@ export function App() {
           <ReaderScreen
             book={currentScreen.book}
             onBack={pop}
-            onToc={() => push({ name: 'table-of-contents' })}
           />
         )
       case 'table-of-contents':
