@@ -57,7 +57,12 @@ export function App() {
       case 'table-of-contents':
         return <TableOfContentsScreen onBack={pop} />
       case 'settings':
-        return <SettingsScreen onBack={pop} />
+        return (
+          <SettingsScreen
+            onBack={pop}
+            onImportArchive={() => push({ name: 'import-archive' })}
+          />
+        )
       case 'export-books':
         return <ExportBooksScreen onBack={pop} />
       case 'import-archive':

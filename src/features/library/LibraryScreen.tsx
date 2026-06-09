@@ -63,8 +63,10 @@ export function LibraryScreen({
     setSelectedKeys(new Set())
   }, [])
 
-  const continuingBooks = booksWithProgress.filter((b) => b.progress !== undefined && b.progress > 0 && b.progress < 100)
-  const unreadBooks = booksWithProgress.filter((b) => !b.progress || b.progress === 0 || b.progress === 100)
+  const continuingBooks = booksWithProgress.filter(
+    (b) => b.progress !== undefined && b.progress > 0 && b.progress < 100,
+  )
+  const allBooks = booksWithProgress
 
   if (loading) {
     return (
@@ -158,7 +160,7 @@ export function LibraryScreen({
             <section className="library-section">
               <h2 className="library-section-title">Library</h2>
               <div className="book-grid">
-                {unreadBooks.map((book) => (
+                {allBooks.map((book) => (
                   <BookCard
                     key={book.syncKey}
                     book={book}
