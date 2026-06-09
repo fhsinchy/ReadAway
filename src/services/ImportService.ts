@@ -268,20 +268,14 @@ function extractCoverFromEpub(epubData: Uint8Array): string | null {
     const unzipped = unzipSync(epubData)
     const keys = Object.keys(unzipped)
 
-    // Priority 1: exact path "images/cover.jpg" (Standard Ebooks convention)
+    // Priority 1: "images/cover.jpg" (Standard Ebooks)
     let key = keys.find(
       k => k.endsWith('/images/cover.jpg') || k === 'images/cover.jpg',
     )
 
-    // Priority 2: any file with "cover" in the filename (image extensions)
+    // Priority 2: "*_cover.jpg" (Project Gutenberg)
     if (!key) {
-      key = keys.find(k => {
-        const lower = k.toLowerCase()
-        return (
-          lower.includes('cover') &&
-          /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(k)
-        )
-      })
+      key = keys.find(k => k.endsWith('_cover.jpg'))
     }
 
     if (!key) return null
