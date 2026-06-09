@@ -150,9 +150,6 @@ export async function openBook(
   storageKey: string,
   element: HTMLElement,
 ): Promise<{ book: Book; rendition: Rendition }> {
-  // Clean up any existing book
-  closeBook()
-
   // Retrieve EPUB bytes from browser-managed storage
   const epubBytes = await getEpub(storageKey)
 
@@ -181,6 +178,7 @@ export async function openBook(
     spread: 'none',
     minSpreadWidth: Number.POSITIVE_INFINITY,
     flow: 'paginated',
+    allowScriptedContent: true,
   }
   const rendition = book.renderTo(element, renditionOptions)
   disableForcedBlankPages(rendition)
@@ -221,9 +219,16 @@ export async function openBook(
 
   // Handle window resize
   const onResize = () => {
+    if (state.rendition !== rendition) return
     const r = element.getBoundingClientRect()
     if (r.width > 0 && r.height > 0) {
-      rendition.resize(r.width, r.height)
+      // epub.js may not have fully initialized yet (render queue still
+      // processing). Silently skip — the ResizeObserver will fire again.
+      try {
+        rendition.resize(r.width, r.height)
+      } catch (err) {
+        console.debug('[ReaderService] Resize skipped, epub.js not ready:', err)
+      }
     }
   }
   window.addEventListener('resize', onResize)
@@ -231,7 +236,6 @@ export async function openBook(
   const resizeObserver =
     'ResizeObserver' in window ? new ResizeObserver(onResize) : null
   resizeObserver?.observe(element)
-  requestAnimationFrame(onResize)
 
   state = { book, rendition, element, onResize, resizeObserver }
 
@@ -257,7 +261,8 @@ export async function restoreProgress(
     // epub.js uses EPUB CFI locators
     await rendition.display(progress.locator)
     return true
-  } catch {
+  } catch (err) {
+    console.debug('[ReaderService] No saved progress to restore:', err)
     return false
   }
 }
@@ -323,7 +328,8 @@ export function getCurrentPagePosition(rendition: Rendition): PagePosition {
       current: Math.max(1, location?.start?.displayed?.page ?? 1),
       total: null,
     }
-  } catch {
+  } catch (err) {
+    console.debug('[ReaderService] Failed to get page position:', err)
     return { current: 1, total: null }
   }
 }
@@ -372,7 +378,8 @@ export function getCurrentPercentage(rendition: Rendition): number {
     }
 
     return location ? getFallbackPercentage(location, rendition) : 0
-  } catch {
+  } catch (err) {
+    console.debug('[ReaderService] Failed to get percentage:', err)
     return 0
   }
 }
@@ -397,8 +404,8 @@ export async function saveProgress(
       percentage,
       updatedAt: Date.now(),
     })
-  } catch {
-    // Silently fail — progress is best-effort
+  } catch (err) {
+    console.debug('[ReaderService] Failed to save progress:', err)
   }
 }
 
@@ -415,7 +422,8 @@ export async function getTableOfContents(): Promise<TocItem[]> {
   try {
     const navigation = await state.book.loaded.navigation
     return (navigation.toc as TocItem[]) || []
-  } catch {
+  } catch (err) {
+    console.debug('[ReaderService] Failed to load table of contents:', err)
     return []
   }
 }
@@ -500,17 +508,19 @@ export function closeBook(): void {
     window.removeEventListener('resize', state.onResize)
   }
 
+  if (state.rendition) {
+    try {
+      state.rendition.destroy()
+    } catch (err) {
+      console.debug('[ReaderService] Error destroying rendition:', err)
+    }
+  }
+
   if (state.book) {
     try {
       state.book.destroy()
-    } catch {
-      // Ignore errors during cleanup
-    }
-  } else if (state.rendition) {
-    try {
-      state.rendition.destroy()
-    } catch {
-      // Ignore errors during cleanup
+    } catch (err) {
+      console.debug('[ReaderService] Error destroying book:', err)
     }
   }
 
@@ -531,7 +541,8 @@ export async function getBookTitle(): Promise<string> {
   try {
     const meta = await state.book.loaded.metadata
     return meta.title || ''
-  } catch {
+  } catch (err) {
+    console.debug('[ReaderService] Failed to get book title:', err)
     return ''
   }
 }
