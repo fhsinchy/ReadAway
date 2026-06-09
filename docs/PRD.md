@@ -1,0 +1,336 @@
+# ReadAway MVP PRD (Feature Locked)
+
+## Product
+
+**Name:** ReadAway
+
+**Tagline:** Own your books. Own your progress.
+
+---
+
+# Vision
+
+ReadAway is a private EPUB reader delivered as a Progressive Web App.
+
+It provides a polished reading experience focused on public domain books while preserving user ownership and privacy.
+
+Users can install ReadAway from the browser, read offline, and manage their own library without creating an account.
+
+The MVP focuses exclusively on books from Standard Ebooks and Project Gutenberg.
+
+---
+
+# Platform
+
+Progressive Web App (PWA)
+
+Supported environments:
+
+* Desktop browsers
+* Android browsers
+* iOS Safari (Add to Home Screen)
+
+The installed PWA experience is considered first-class.
+
+---
+
+# Tech Stack
+
+* React
+* TypeScript
+* Vite
+* epub.js
+* Dexie (IndexedDB)
+* Vite PWA Plugin
+
+---
+
+# Supported Books
+
+ReadAway MVP supports EPUB files originating from:
+
+* Standard Ebooks
+* Project Gutenberg
+
+All other EPUB files are rejected.
+
+Unsupported EPUB message:
+
+> This version of ReadAway currently supports EPUB books from Standard Ebooks and Project Gutenberg only.
+
+---
+
+# Import Flow
+
+```text
+Select EPUB
+↓
+Validate source
+↓
+Generate book identity
+↓
+Copy EPUB into browser-managed storage
+↓
+Extract metadata and cover
+↓
+Add to library
+```
+
+Original EPUB files are never used after import.
+
+---
+
+# Book Identity
+
+Each book has two identifiers.
+
+## Sync Identity
+
+Used to identify the book.
+
+```ts
+syncKey = source + ":" + sourceId
+```
+
+Examples:
+
+```text
+standardebooks:bram-stoker/dracula
+gutenberg:10007
+```
+
+Books with identical sync keys are treated as the same book.
+
+## Edition Identity
+
+Used to identify the exact EPUB version.
+
+```ts
+editionHash = SHA256(epub bytes)
+```
+
+This is not used as the primary identity.
+
+---
+
+# Browser Storage
+
+Imported EPUBs are copied into browser-managed storage.
+
+ReadAway uses:
+
+* IndexedDB for metadata and progress.
+* OPFS (Origin Private File System) for EPUB files when available.
+
+If OPFS is unavailable, EPUBs may be stored using IndexedDB.
+
+The original imported file is never used after import.
+
+---
+
+# Library
+
+Features:
+
+* View imported books
+* Continue Reading section
+* Display cover
+* Display title
+* Display author
+* Display reading progress
+
+No search.
+
+No collections.
+
+No sorting customization.
+
+---
+
+# Reader
+
+Features:
+
+* EPUB rendering
+* Pagination
+* Previous page
+* Next page
+* Table of contents
+* Chapter navigation
+* Adjustable font size
+* Resume reading automatically
+
+Progress is saved:
+
+* On page changes
+* When the application backgrounds
+* Before the browser tab closes
+
+---
+
+# Themes
+
+Three themes:
+
+## Light
+
+Warm paper.
+
+```text
+#FAF8F2
+```
+
+## Dark
+
+Charcoal.
+
+```text
+#1C1C1E
+```
+
+## Black
+
+Pure black.
+
+```text
+#000000
+```
+
+Theme selection is remembered.
+
+Default behavior:
+
+* System Light → Light
+* System Dark → Dark
+
+Black is manually selected.
+
+---
+
+# Offline Support
+
+ReadAway is installable as a PWA.
+
+Requirements:
+
+* Core application shell available offline.
+* Previously imported books available offline.
+* Reading progress preserved offline.
+
+---
+
+# Library Export
+
+Users can export selected books.
+
+Export flow:
+
+```text
+Library
+↓
+Select books
+↓
+Choose export options
+↓
+Generate archive
+↓
+Save or share
+```
+
+Users can:
+
+* Select individual books
+* Select multiple books
+* Select all books
+
+Export options:
+
+```text
+☑ Include reading progress
+```
+
+Books are always included.
+
+Progress is optional.
+
+---
+
+# Library Import
+
+ReadAway imports its own archive format.
+
+Import flow:
+
+```text
+Select .raway archive
+↓
+Preview contents
+↓
+Select books
+↓
+Import
+```
+
+Imported books are copied into browser-managed storage.
+
+If progress exists in the archive, it is restored.
+
+---
+
+# Archive Format
+
+Extension:
+
+```text
+.raway
+```
+
+Structure:
+
+```text
+manifest.json
+
+books/
+```
+
+The archive contains:
+
+* EPUB files
+* Metadata
+* Optional progress
+
+---
+
+# Installation Experience
+
+ReadAway may prompt users to install the application as a PWA.
+
+Requirements:
+
+* Never blocks reading.
+* Dismissible.
+* Never shown more than once per session.
+
+---
+
+# Feature Lock
+
+The following are explicitly out of scope for the MVP:
+
+* Arbitrary EPUB support
+* PDF support
+* MOBI support
+* Highlights
+* Notes
+* Dictionaries
+* Text-to-speech
+* Social features
+* Accounts
+* Cloud synchronization
+* Book purchasing
+* Book stores
+* Onboarding tutorials
+* Reading statistics
+* Cross-device QR synchronization
+
+If a feature is not listed in this document, it is not part of the MVP.
