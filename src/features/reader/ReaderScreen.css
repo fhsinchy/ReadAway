@@ -150,11 +150,30 @@
 }
 
 .reader-page-count {
-  min-width: 96px;
+  min-width: 132px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   text-align: center;
   color: #888;
+  line-height: 1.25;
+}
+
+.reader-page-count-main {
+  color: inherit;
+}
+
+.reader-page-count-chapter {
+  font-size: 11px;
+  color: #777;
+}
+
+.reader-theme-dark .reader-page-count-chapter,
+.reader-theme-black .reader-page-count-chapter {
+  color: #aaa;
 }
 
 /* ============================================================

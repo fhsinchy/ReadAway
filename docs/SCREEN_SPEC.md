@@ -294,7 +294,8 @@ Appearance
 ```text id="jlwmjt"
 Previous
 
-Progress
+Whole-book page number, e.g. Page 82-85 of 112
+Pages left in current chapter
 
 Next
 ```

@@ -298,6 +298,8 @@ Responsibilities:
 * Open book
 * Restore progress
 * Save progress
+* Calculate stable whole-book page position
+* Calculate pages left in current EPUB section/chapter
 * Navigate chapters
 * Retrieve table of contents
 * Apply themes

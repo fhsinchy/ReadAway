@@ -27,11 +27,18 @@ interface Props {
 function formatPagePosition(position: PagePosition): string {
   if (position.total) {
     if (position.end && position.end > position.current) {
-      return `${position.current}-${position.end} / ${position.total}`
+      return `Page ${position.current}-${position.end} of ${position.total}`
     }
-    return `${position.current} / ${position.total}`
+    return `Page ${position.current} of ${position.total}`
   }
   return `Page ${position.current}`
+}
+
+function formatChapterPagesLeft(position: PagePosition): string {
+  if (position.chapterPagesLeft === null) return ''
+
+  const pageText = position.chapterPagesLeft === 1 ? 'page' : 'pages'
+  return `${position.chapterPagesLeft} ${pageText} left in chapter`
 }
 
 function loadNavigationWithTimeout(epubBook: EpubBook): Promise<TocItem[]> {
@@ -71,6 +78,7 @@ export function ReaderScreen({ book, onBack }: Props) {
   const [pagePosition, setPagePosition] = useState<PagePosition>({
     current: 1,
     total: null,
+    chapterPagesLeft: null,
   })
   const [bookTitle, setBookTitle] = useState(book.title)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
@@ -353,7 +361,14 @@ export function ReaderScreen({ book, onBack }: Props) {
             ← Prev
           </button>
           <div className="reader-page-count">
-            {formatPagePosition(pagePosition)}
+            <span className="reader-page-count-main">
+              {formatPagePosition(pagePosition)}
+            </span>
+            {pagePosition.chapterPagesLeft !== null && (
+              <span className="reader-page-count-chapter">
+                {formatChapterPagesLeft(pagePosition)}
+              </span>
+            )}
           </div>
           <button className="btn-text" onClick={handleNext}>
             Next →

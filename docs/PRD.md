@@ -155,6 +155,8 @@ Features:
 * Pagination
 * Previous page
 * Next page
+* Stable whole-book page number
+* Pages left in the current chapter
 * Table of contents
 * Chapter navigation
 * Adjustable font size

@@ -34,6 +34,7 @@ export interface PagePosition {
   current: number
   end?: number
   total: number | null
+  chapterPagesLeft: number | null
 }
 
 interface ReaderLocation {
@@ -124,6 +125,16 @@ function pageFromCfi(rendition: Rendition, cfi: string, total: number): number {
   const location = Number(rendition.book.locations.locationFromCfi(cfi))
   const page = Number.isFinite(location) ? location + 1 : 1
   return Math.max(1, Math.min(total, page))
+}
+
+function getChapterPagesLeft(location: ReaderLocation | null): number | null {
+  const total = location?.start?.displayed?.total
+  if (!total || total < 1) return null
+
+  const endPage =
+    location.end?.displayed?.page ?? location.start?.displayed?.page ?? 1
+
+  return Math.max(0, total - endPage)
 }
 
 // ============================================================
@@ -321,16 +332,18 @@ export function getCurrentPagePosition(rendition: Rendition): PagePosition {
         current,
         end: Math.max(current, end),
         total,
+        chapterPagesLeft: getChapterPagesLeft(location),
       }
     }
 
     return {
       current: Math.max(1, location?.start?.displayed?.page ?? 1),
       total: null,
+      chapterPagesLeft: getChapterPagesLeft(location),
     }
   } catch (err) {
     console.debug('[ReaderService] Failed to get page position:', err)
-    return { current: 1, total: null }
+    return { current: 1, total: null, chapterPagesLeft: null }
   }
 }
 
