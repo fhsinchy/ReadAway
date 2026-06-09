@@ -1,0 +1,345 @@
+/* ============================================================
+   Reader Screen
+   ============================================================ */
+
+.reader {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Theme backgrounds */
+.reader-theme-light {
+  background: #faf8f2;
+}
+.reader-theme-dark {
+  background: #1c1c1e;
+}
+.reader-theme-black {
+  background: #000000;
+}
+
+/* EPUB Viewer */
+.reader-viewer {
+  flex: 1;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* Controls */
+.reader-controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.reader-controls-hidden {
+  opacity: 0;
+}
+
+.reader-controls > * {
+  pointer-events: auto;
+}
+
+/* Top bar */
+.reader-topbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(250, 248, 242, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 8px;
+}
+
+.reader-theme-dark .reader-topbar {
+  background: rgba(28, 28, 30, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reader-theme-black .reader-topbar {
+  background: rgba(0, 0, 0, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reader-back {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.reader-book-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1c1c1e;
+}
+
+.reader-theme-dark .reader-book-title {
+  color: #e5e5e5;
+}
+
+.reader-theme-black .reader-book-title {
+  color: #cccccc;
+}
+
+.reader-topbar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* Bottom bar */
+.reader-bottombar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 16px;
+  background: rgba(250, 248, 242, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.reader-theme-dark .reader-bottombar {
+  background: rgba(28, 28, 30, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reader-theme-black .reader-bottombar {
+  background: rgba(0, 0, 0, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reader-progress {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ============================================================
+   Appearance Sheet (bottom sheet)
+   ============================================================ */
+
+.appearance-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.appearance-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #faf8f2;
+  border-radius: 16px 16px 0 0;
+  padding: 24px 16px 32px;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.appearance-title {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1c1c1e;
+}
+
+.appearance-section {
+  margin-bottom: 20px;
+}
+
+.appearance-section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+/* Theme options */
+.theme-options {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-btn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e0ddd4;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #1c1c1e;
+  transition: all 0.15s ease;
+}
+
+.theme-btn:hover {
+  border-color: #aaa;
+}
+
+.theme-btn-active {
+  border-color: #1c1c1e;
+  background: #1c1c1e;
+  color: #faf8f2;
+}
+
+/* Font size control */
+.font-size-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.font-size-value {
+  font-size: 18px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+  color: #1c1c1e;
+}
+
+.appearance-close {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   Import EPUB Screen
+   ============================================================ */
+
+.import-epub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  background: #faf8f2;
+}
+
+.import-epub h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1c1c1e;
+}
+
+.import-epub p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.import-epub .btn-primary,
+.import-epub .btn-text {
+  margin: 4px 0;
+}
+
+.import-epub-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.import-epub-success p {
+  margin-bottom: 4px;
+}
+
+.import-epub-importing p {
+  font-size: 16px;
+  color: #888;
+}
+
+/* ============================================================
+   Table of Contents Screen
+   ============================================================ */
+
+.toc-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #faf8f2;
+}
+
+.toc-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0ddd4;
+  gap: 8px;
+}
+
+.toc-title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  color: #1c1c1e;
+}
+
+.toc-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.toc-loading,
+.toc-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+.toc-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: #1c1c1e;
+  cursor: pointer;
+  border-bottom: 1px solid #f0ede4;
+  transition: background 0.1s;
+  line-height: 1.4;
+}
+
+.toc-item:hover {
+  background: #f0ede4;
+}
+
+.toc-item:active {
+  background: #e8e4d8;
+}
