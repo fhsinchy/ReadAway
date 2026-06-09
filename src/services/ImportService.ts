@@ -59,11 +59,8 @@ export async function importEpub(file: File): Promise<ImportResult> {
   const storageKey = `${syncKey.replace(/[^a-zA-Z0-9_-]/g, '_')}.epub`
   await storeEpub(storageKey, epubBytes)
 
-  // 7. Extract cover image and store reference
-  let coverPath: string | null = null
-  if (meta.coverHref) {
-    coverPath = await extractCover(new Uint8Array(epubBytes), meta.coverHref)
-  }
+  // 7. Extract cover image — search for cover files directly, no OPF parsing
+  const coverPath = extractCoverFromEpub(new Uint8Array(epubBytes))
 
   // 8. Create book record
   const book = {
@@ -197,40 +194,10 @@ function parseMetadata(opfXml: string): EpubMetadata {
   const source = getTag('source')
   const rights = getTag('rights')
 
-  // Find cover image reference
-  let coverHref: string | null = null
-  const coverMatch = opfXml.match(
-    /<meta[^>]*name="cover"[^>]*content="([^"]*)"[^>]*\/?>/i,
-  )
-  if (coverMatch) {
-    const coverId = coverMatch[1]
-    // Attribute order varies — match either id-before-href or href-before-id
-    const escapedId = escapeRegExp(coverId)
-    const itemMatch = opfXml.match(
-      new RegExp(
-        `<item[^>]*id="${escapedId}"[^>]*href="([^"]*)"` +
-          `|<item[^>]*href="([^"]*)"[^>]*id="${escapedId}"`,
-        'i',
-      ),
-    )
-    if (itemMatch) {
-      coverHref = itemMatch[1] || itemMatch[2]
-    }
-  }
-
-  // Fallback: look for item with properties="cover-image"
-  if (!coverHref) {
-    const propMatch = opfXml.match(
-      /<item[^>]*properties="[^"]*cover-image[^"]*"[^>]*href="([^"]*)"/i,
-    )
-    if (propMatch) coverHref = propMatch[1]
-  }
-
   return {
     title: title || 'Unknown Title',
     author: author || 'Unknown Author',
     language: language || 'en',
-    coverHref,
     publisher,
     identifier,
     source,
@@ -288,49 +255,50 @@ function extractSourceId(opfXml: string, source: BookSource): string {
 }
 
 // ============================================================
-// Cover extraction
+// Cover extraction — simple file search, no OPF parsing
 // ============================================================
 
-async function extractCover(
-  epubData: Uint8Array,
-  coverHref: string,
-): Promise<string | null> {
+/**
+ * Find the cover image by searching the unzipped EPUB for common cover filenames.
+ * Standard Ebooks: always images/cover.jpg
+ * Project Gutenberg: cover image in OEBPS/ with "cover" in the name
+ */
+function extractCoverFromEpub(epubData: Uint8Array): string | null {
   try {
     const unzipped = unzipSync(epubData)
+    const keys = Object.keys(unzipped)
 
-    // Find the cover file
-    let coverBytes: Uint8Array | undefined
-    const filename = coverHref.split('/').pop()!
-    const key = Object.keys(unzipped).find(k => k.endsWith(filename))
-    if (key) coverBytes = unzipped[key]
+    // Priority 1: exact path "images/cover.jpg" (Standard Ebooks convention)
+    let key = keys.find(
+      k => k.endsWith('/images/cover.jpg') || k === 'images/cover.jpg',
+    )
 
-    if (!coverBytes) return null
+    // Priority 2: any file with "cover" in the filename (image extensions)
+    if (!key) {
+      key = keys.find(k => {
+        const lower = k.toLowerCase()
+        return (
+          lower.includes('cover') &&
+          /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(k)
+        )
+      })
+    }
 
-    // Store as data URL in the books table (covers are small)
-    const mime = getMimeType(filename)
-    const base64 = uint8ToBase64(coverBytes)
+    if (!key) return null
+
+    const bytes = unzipped[key]
+    const ext = key.split('.').pop()?.toLowerCase()
+    const mime =
+      ext === 'png' ? 'image/png'
+      : ext === 'gif' ? 'image/gif'
+      : ext === 'webp' ? 'image/webp'
+      : ext === 'svg' ? 'image/svg+xml'
+      : 'image/jpeg'
+
+    const base64 = uint8ToBase64(bytes)
     return `data:${mime};base64,${base64}`
   } catch {
     return null
-  }
-}
-
-function getMimeType(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase()
-  switch (ext) {
-    case 'png':
-      return 'image/png'
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg'
-    case 'gif':
-      return 'image/gif'
-    case 'webp':
-      return 'image/webp'
-    case 'svg':
-      return 'image/svg+xml'
-    default:
-      return 'image/jpeg'
   }
 }
 
@@ -343,10 +311,6 @@ async function computeSha256(data: ArrayBuffer): Promise<string> {
   return Array.from(new Uint8Array(hashBuffer))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
-}
-
-function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 function uint8ToBase64(bytes: Uint8Array): string {

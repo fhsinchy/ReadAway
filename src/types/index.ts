@@ -48,7 +48,6 @@ export interface EpubMetadata {
   title: string
   author: string
   language: string
-  coverHref: string | null
   publisher: string
   identifier: string
   source: string
