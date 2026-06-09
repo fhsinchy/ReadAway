@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Screen } from '@/core/navigation'
 import { LibraryScreen } from '@/features/library/LibraryScreen'
 import { ImportEpubScreen } from '@/features/import-books/ImportEpubScreen'
@@ -7,9 +7,19 @@ import { ReaderScreen } from '@/features/reader/ReaderScreen'
 import { TableOfContentsScreen } from '@/features/reader/TableOfContentsScreen'
 import { SettingsScreen } from '@/features/settings/SettingsScreen'
 import { ExportBooksScreen } from '@/features/export-library/ExportBooksScreen'
+import { db } from '@/db'
+
+const ACTIVE_BOOK_KEY = 'readaway-active-book'
 
 export function App() {
-  const [screenStack, setScreenStack] = useState<Screen[]>([{ name: 'library' }])
+  const [screenStack, setScreenStack] = useState<Screen[]>(() => {
+    // Restore reader screen on refresh
+    const saved = sessionStorage.getItem(ACTIVE_BOOK_KEY)
+    if (saved) {
+      return [{ name: 'library' }, { name: 'reader', book: JSON.parse(saved) }]
+    }
+    return [{ name: 'library' }]
+  })
 
   const currentScreen = screenStack[screenStack.length - 1]
 
@@ -23,6 +33,32 @@ export function App() {
 
   const replaceTop = useCallback((screen: Screen) => {
     setScreenStack((prev) => [...prev.slice(0, -1), screen])
+  }, [])
+
+  // Persist the active book to sessionStorage so a page refresh restores
+  // the reader instead of falling back to the library.
+  useEffect(() => {
+    const readerScreen = [...screenStack].reverse().find((s) => s.name === 'reader')
+    if (readerScreen && readerScreen.name === 'reader') {
+      sessionStorage.setItem(ACTIVE_BOOK_KEY, JSON.stringify(readerScreen.book))
+    } else {
+      sessionStorage.removeItem(ACTIVE_BOOK_KEY)
+    }
+  }, [screenStack])
+
+  // Validate restored book still exists in the database. If it was deleted
+  // (e.g. in another tab), fall back to the library.
+  useEffect(() => {
+    const current = screenStack[screenStack.length - 1]
+    if (current.name === 'reader') {
+      db.books.get(current.book.syncKey).then((exists) => {
+        if (!exists) {
+          setScreenStack([{ name: 'library' }])
+        }
+      })
+    }
+    // Only run on mount to validate the restored book
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const renderScreen = () => {

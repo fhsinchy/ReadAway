@@ -24,7 +24,7 @@ export function LibraryScreen({
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [booksWithProgress, setBooksWithProgress] = useState<
-    (Book & { progress?: number })[]
+    (Book & { progress?: number; lastReadAt?: number })[]
   >([])
 
   useEffect(() => {
@@ -33,9 +33,20 @@ export function LibraryScreen({
       const withP = await Promise.all(
         all.map(async (book) => {
           const p = await db.progress.get(book.syncKey)
-          return { ...book, progress: p?.percentage }
+          return {
+            ...book,
+            progress: p?.percentage,
+            lastReadAt: p?.updatedAt,
+          }
         }),
       )
+      // Sort: most recently read first, unread books last (by import date)
+      withP.sort((a, b) => {
+        const aTime = a.lastReadAt ?? 0
+        const bTime = b.lastReadAt ?? 0
+        if (aTime !== bTime) return bTime - aTime
+        return b.importedAt - a.importedAt
+      })
       setBooksWithProgress(withP)
     }
     load()
@@ -73,11 +84,6 @@ export function LibraryScreen({
     setSelectionMode(false)
     setSelectedKeys(new Set())
   }, [])
-
-  const continuingBooks = booksWithProgress.filter(
-    (b) => b.progress !== undefined && b.progress > 0 && b.progress < 100,
-  )
-  const allBooks = booksWithProgress
 
   if (loading) {
     return (
@@ -163,51 +169,25 @@ export function LibraryScreen({
             </button>
           </div>
         ) : (
-          <>
-            {/* Continue Reading */}
-            {continuingBooks.length > 0 && (
-              <section className="library-section">
-                <h2 className="library-section-title">Continue Reading</h2>
-                <div className="book-grid">
-                  {continuingBooks.map((book) => (
-                    <BookCard
-                      key={book.syncKey}
-                      book={book}
-                      onOpen={() => onOpenBook(book)}
-                      selectionMode={selectionMode}
-                      selected={selectedKeys.has(book.syncKey)}
-                      onToggleSelect={() => toggleSelection(book.syncKey)}
-                      onLongPress={() => {
-                        setSelectionMode(true)
-                        toggleSelection(book.syncKey)
-                      }}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Library Grid */}
-            <section className="library-section">
-              <h2 className="library-section-title">Library</h2>
-              <div className="book-grid">
-                {allBooks.map((book) => (
-                  <BookCard
-                    key={book.syncKey}
-                    book={book}
-                    onOpen={() => onOpenBook(book)}
-                    selectionMode={selectionMode}
-                    selected={selectedKeys.has(book.syncKey)}
-                    onToggleSelect={() => toggleSelection(book.syncKey)}
-                    onLongPress={() => {
-                      setSelectionMode(true)
-                      toggleSelection(book.syncKey)
-                    }}
-                  />
-                ))}
-              </div>
-            </section>
-          </>
+          <section className="library-section">
+            <h2 className="library-section-title">Library</h2>
+            <div className="book-grid">
+              {booksWithProgress.map((book) => (
+                <BookCard
+                  key={book.syncKey}
+                  book={book}
+                  onOpen={() => onOpenBook(book)}
+                  selectionMode={selectionMode}
+                  selected={selectedKeys.has(book.syncKey)}
+                  onToggleSelect={() => toggleSelection(book.syncKey)}
+                  onLongPress={() => {
+                    setSelectionMode(true)
+                    toggleSelection(book.syncKey)
+                  }}
+                />
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </div>
@@ -222,7 +202,7 @@ function BookCard({
   onToggleSelect,
   onLongPress,
 }: {
-  book: Book & { progress?: number }
+  book: Book & { progress?: number; lastReadAt?: number }
   onOpen: () => void
   selectionMode: boolean
   selected: boolean
