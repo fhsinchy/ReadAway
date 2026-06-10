@@ -143,9 +143,15 @@ src/
 ├── hooks/
 ├── types/
 └── main.tsx
+scripts/
+└── dictionary/  # Build-time dictionary pack generation scripts
 ```
 
 Do not introduce additional top-level folders without justification.
+
+The `scripts/dictionary/` folder is reserved for build-time generation and
+verification of static `.rawaydict` assets. Runtime application code must not
+import from `scripts/`.
 
 ---
 
@@ -263,6 +269,57 @@ updatedAt
 
 `locations` stores the serialized epub.js location map for stable synthetic page numbers.
 
+## Dictionaries
+
+```text
+id
+language
+title
+
+sourceName
+sourceVersion
+license
+attribution
+
+entryCount
+formCount
+installedAt
+sizeBytes
+```
+
+## Dictionary Entries
+
+```text
+key
+dictionaryId
+
+lemma
+normalizedLemma
+entriesJson
+```
+
+`key` is:
+
+```text
+dictionaryId + ":" + normalizedLemma
+```
+
+## Dictionary Forms
+
+```text
+key
+dictionaryId
+
+normalizedForm
+lemmasJson
+```
+
+`key` is:
+
+```text
+dictionaryId + ":" + normalizedForm
+```
+
 No additional tables without updating this document.
 
 ---
@@ -305,6 +362,8 @@ Responsibilities:
 * Apply page colors
 * Apply font size
 * Apply reader layout
+* Emit selected reader text for dictionary lookup without leaking epub.js
+  objects into feature code
 
 ---
 
@@ -359,6 +418,64 @@ Responsibilities:
 * Restore reading progress
 * Apply reader appearance settings
 
+## DictionaryService
+
+Responsibilities:
+
+* Fetch the dictionary manifest from static assets
+* Download the `.rawaydict` pack after explicit user action
+* Verify pack checksum before installation
+* Validate dictionary pack structure
+* Install dictionary metadata, entries, and form mappings into IndexedDB
+* Remove installed dictionary data
+* Report installed dictionary status and storage size
+* Normalize selected words
+* Apply conservative English lemmatization
+* Lookup definitions
+* Return dictionary results to reader UI
+
+Only DictionaryService may access dictionary tables directly.
+
+DictionaryService must not call live dictionary APIs.
+
+---
+
+# Dictionary Rules
+
+ReadAway supports one managed English dictionary pack for the first dictionary
+release.
+
+Dictionary source:
+
+```text
+Open English WordNet 2025 core JSON
+```
+
+Dictionary pack extension:
+
+```text
+.rawaydict
+```
+
+Dictionary packs are static assets deployed with ReadAway:
+
+```text
+/dictionaries/manifest.json
+/dictionaries/en-oewn-2025.rawaydict
+```
+
+Rules:
+
+* Dictionary packs are not manually imported by users.
+* Dictionary packs are not precached by the service worker by default.
+* Dictionary download happens only after explicit user action.
+* Installed dictionary lookup must work offline.
+* Dictionary data is separate from books, progress, and page maps.
+* Dictionary data is not included in `.raway` backups.
+* Dictionary attribution must be visible in Settings/About.
+* If no dictionary is installed, lookup returns a not-installed state.
+* If no entry is found, lookup returns a no-definition state.
+
 ---
 
 # Storage Rules
@@ -378,6 +495,9 @@ IndexedDB
 The original imported file must never be used after import.
 
 Reading always uses internally stored copies.
+
+Installed dictionaries are stored in IndexedDB. They may be removed and
+reinstalled independently from the user library.
 
 ---
 
@@ -459,6 +579,8 @@ Each selected book is backed up as a snapshot.
 The snapshot always keeps the EPUB file, metadata, reading progress when it
 exists, and original timestamps together.
 
+Dictionaries are never included in `.raway` archives.
+
 During restore, ReadAway must compare backup progress timestamps with local
 progress timestamps. Books with newer local progress are unchecked by default.
 
@@ -472,8 +594,11 @@ Requirements:
 * Installable experience
 * Service worker support
 * Imported books accessible offline
+* Installed dictionaries accessible offline
 
-The application must function without an internet connection after installation and import.
+The application shell and imported books must function without an internet
+connection after installation and import. Installed dictionaries must also
+function without an internet connection after dictionary installation.
 
 ---
 
@@ -514,6 +639,9 @@ Critical paths requiring tests:
 * RAWAY export
 * RAWAY import
 * Offline reading
+* Dictionary installation
+* Dictionary lookup
+* Dictionary removal
 
 ---
 

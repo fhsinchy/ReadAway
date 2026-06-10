@@ -44,6 +44,101 @@ export interface PageMap {
 }
 
 // ============================================================
+// Dictionary
+// ============================================================
+
+export interface DictionaryRecord {
+  id: string
+  language: string
+  title: string
+  sourceName: string
+  sourceVersion: string
+  license: string
+  attribution: string
+  entryCount: number
+  formCount: number
+  installedAt: number
+  sizeBytes: number
+}
+
+export interface DictionaryEntryRecord {
+  key: string
+  dictionaryId: string
+  lemma: string
+  normalizedLemma: string
+  entriesJson: string
+}
+
+export interface DictionaryFormRecord {
+  key: string
+  dictionaryId: string
+  normalizedForm: string
+  lemmasJson: string
+}
+
+export interface DictionaryDefinitionGroup {
+  pos: string
+  definitions: string[]
+  examples: string[]
+  synonyms: string[]
+}
+
+export type DictionaryLookupResult =
+  | {
+      status: 'found'
+      query: string
+      normalizedQuery: string
+      lemma: string
+      entries: DictionaryDefinitionGroup[]
+    }
+  | {
+      status: 'not_found'
+      query: string
+      normalizedQuery: string
+    }
+  | {
+      status: 'not_installed'
+      query: string
+      normalizedQuery: string
+    }
+
+export interface DictionaryCatalogItem {
+  id: string
+  language: string
+  title: string
+  sourceName: string
+  sourceVersion: string
+  license: string
+  attribution: string
+  url: string
+  sha256: string
+  sizeBytes: number
+  entryCount: number
+  formCount: number
+}
+
+export interface DictionaryCatalog {
+  version: 1
+  generatedAt: number
+  dictionaries: DictionaryCatalogItem[]
+}
+
+export interface DictionaryPackManifest {
+  formatVersion: 1
+  dictionaryId: string
+  language: string
+  title: string
+  sourceName: string
+  sourceVersion: string
+  license: string
+  attribution: string
+  generatedAt: number
+  entryCount: number
+  formCount: number
+  contentSha256: string
+}
+
+// ============================================================
 // Themes
 // ============================================================
 

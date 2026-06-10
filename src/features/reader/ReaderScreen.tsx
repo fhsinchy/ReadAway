@@ -1,7 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import type { CSSProperties, ChangeEvent } from 'react'
 import type { Book as EpubBook, Rendition } from 'epubjs'
-import type { Book, ReaderLayout, Theme } from '@/types'
+import type {
+  Book,
+  DictionaryDefinitionGroup,
+  DictionaryLookupResult,
+  ReaderLayout,
+  Theme,
+} from '@/types'
 import {
   openBook,
   closeBook,
@@ -17,6 +23,12 @@ import {
   type PagePosition,
   type TocItem,
 } from '@/services/ReaderService'
+import {
+  extractSingleLookupWord,
+  installDefaultDictionary,
+  lookupWord,
+  type DictionaryInstallProgress,
+} from '@/services/DictionaryService'
 import { useTheme } from '@/hooks/useTheme'
 import './ReaderScreen.css'
 
@@ -32,6 +44,8 @@ const SWIPE_MIN_DISTANCE = 50
 const SWIPE_AXIS_RATIO = 1.5
 const TWO_COLUMN_MIN_WIDTH = 840
 const TWO_COLUMN_MIN_HEIGHT = 480
+const MAX_DICTIONARY_GROUPS = 3
+const MAX_DICTIONARY_DEFINITIONS = 5
 const PAGE_COLOR_OPTIONS = [
   { key: 'light', label: 'Light', swatch: '#FAF8F2' },
   { key: 'dark', label: 'Dark', swatch: '#1C1C1E' },
@@ -59,6 +73,15 @@ type FullscreenCapableDocument = Document & {
   webkitExitFullscreen?: () => Promise<void> | void
   webkitFullscreenElement?: Element | null
   webkitFullscreenEnabled?: boolean
+}
+
+interface DictionaryDrawerState {
+  query: string
+  loading: boolean
+  installing: boolean
+  installProgress: DictionaryInstallProgress | null
+  result: DictionaryLookupResult | null
+  error: string | null
 }
 
 function getFullscreenElement(): Element | null {
@@ -161,6 +184,7 @@ export function ReaderScreen({ book, onBack }: Props) {
   const effectIdRef = useRef(0)
   const appearanceOpenRef = useRef(false)
   const tocOpenRef = useRef(false)
+  const dictionaryOpenRef = useRef(false)
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
   const {
     theme,
@@ -188,11 +212,14 @@ export function ReaderScreen({ book, onBack }: Props) {
   const [tocLoaded, setTocLoaded] = useState(false)
   const [fullscreenSupported, setFullscreenSupported] = useState(false)
   const [fullscreenActive, setFullscreenActive] = useState(false)
+  const [dictionaryDrawer, setDictionaryDrawer] =
+    useState<DictionaryDrawerState | null>(null)
 
   useEffect(() => {
     appearanceOpenRef.current = appearanceOpen
     tocOpenRef.current = tocOpen
-  }, [appearanceOpen, tocOpen])
+    dictionaryOpenRef.current = dictionaryDrawer !== null
+  }, [appearanceOpen, tocOpen, dictionaryDrawer])
 
   useLayoutEffect(() => {
     const reader = readerRef.current
@@ -245,6 +272,7 @@ export function ReaderScreen({ book, onBack }: Props) {
     (direction: 'next' | 'prev') => {
       const rendition = renditionRef.current
       if (!rendition) return
+      setDictionaryDrawer(null)
 
       const turnPage = () =>
         direction === 'prev' ? rendition.prev() : rendition.next()
@@ -273,13 +301,25 @@ export function ReaderScreen({ book, onBack }: Props) {
   )
 
   const handleSwipeStart = useCallback((event: TouchEvent) => {
-    if (appearanceOpenRef.current || tocOpenRef.current) return
+    if (
+      appearanceOpenRef.current ||
+      tocOpenRef.current ||
+      dictionaryOpenRef.current
+    ) {
+      return
+    }
     swipeStartRef.current = getTouchPoint(event)
   }, [])
 
   const handleSwipeEnd = useCallback(
     (event: TouchEvent) => {
-      if (appearanceOpenRef.current || tocOpenRef.current) return
+      if (
+        appearanceOpenRef.current ||
+        tocOpenRef.current ||
+        dictionaryOpenRef.current
+      ) {
+        return
+      }
 
       const start = swipeStartRef.current
       swipeStartRef.current = null
@@ -301,6 +341,51 @@ export function ReaderScreen({ book, onBack }: Props) {
       navigatePage(deltaX < 0 ? 'next' : 'prev')
     },
     [navigatePage],
+  )
+
+  const handleDictionarySelection = useCallback(
+    async (
+      epubBook: EpubBook,
+      cfiRange: string,
+    ) => {
+      if (appearanceOpenRef.current || tocOpenRef.current) return
+
+      const range = await epubBook.getRange(cfiRange)
+      const selectedText = range?.toString().trim() ?? ''
+      const selectedWord = extractSingleLookupWord(selectedText)
+      if (!selectedWord) return
+
+      setControlsVisible(false)
+      setDictionaryDrawer({
+        query: selectedWord,
+        loading: true,
+        installing: false,
+        installProgress: null,
+        result: null,
+        error: null,
+      })
+
+      try {
+        const result = await lookupWord(selectedWord)
+        setDictionaryDrawer((current) =>
+          current?.query === selectedWord
+            ? { ...current, loading: false, result }
+            : current,
+        )
+      } catch (err) {
+        console.error('[ReaderScreen] Dictionary lookup failed:', err)
+        setDictionaryDrawer((current) =>
+          current?.query === selectedWord
+            ? {
+                ...current,
+                loading: false,
+                error: 'Dictionary lookup failed.',
+              }
+            : current,
+        )
+      }
+    },
+    [],
   )
 
   useEffect(() => {
@@ -377,6 +462,16 @@ export function ReaderScreen({ book, onBack }: Props) {
         rendition.on('touchend', (event: TouchEvent) => {
           handleSwipeEnd(event)
         })
+        rendition.on(
+          'selected',
+          (cfiRange: string) => {
+            handleDictionarySelection(epubBook, cfiRange).catch(
+              (err: unknown) => {
+                console.error('[ReaderScreen] Dictionary selection failed:', err)
+              },
+            )
+          },
+        )
 
         // Restore progress or show the first readable section
         const restored = await restoreProgress(rendition, book.syncKey)
@@ -436,7 +531,13 @@ export function ReaderScreen({ book, onBack }: Props) {
     }
     // Appearance changes are applied by the dedicated effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book.storageKey, book.syncKey, book.title, handleKeyboardPageTurn])
+  }, [
+    book.storageKey,
+    book.syncKey,
+    book.title,
+    handleDictionarySelection,
+    handleKeyboardPageTurn,
+  ])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -553,15 +654,65 @@ export function ReaderScreen({ book, onBack }: Props) {
     navigatePage('next')
   }, [navigatePage])
 
+  const handleInstallDictionaryFromReader = useCallback(async () => {
+    const selectedText = dictionaryDrawer?.query
+    if (!selectedText) return
+
+    setDictionaryDrawer((current) =>
+      current
+        ? {
+            ...current,
+            installing: true,
+            installProgress: null,
+            error: null,
+          }
+        : current,
+    )
+
+    try {
+      await installDefaultDictionary((progress) => {
+        setDictionaryDrawer((current) =>
+          current ? { ...current, installProgress: progress } : current,
+        )
+      })
+      const result = await lookupWord(selectedText)
+      setDictionaryDrawer((current) =>
+        current?.query === selectedText
+          ? {
+              ...current,
+              installing: false,
+              installProgress: null,
+              loading: false,
+              result,
+            }
+          : current,
+      )
+    } catch (err) {
+      console.error('[ReaderScreen] Dictionary install failed:', err)
+      setDictionaryDrawer((current) =>
+        current
+          ? {
+              ...current,
+              installing: false,
+              installProgress: null,
+              error: 'Dictionary download failed. Check your connection and try again.',
+            }
+          : current,
+      )
+    }
+  }, [dictionaryDrawer?.query])
+
   const handleOpenToc = useCallback(() => {
     if (!tocLoaded) {
       setTocLoading(true)
     }
+    setDictionaryDrawer(null)
     setAppearanceOpen(false)
     setTocOpen(true)
   }, [tocLoaded])
 
   const handleOpenAppearance = useCallback(() => {
+    setDictionaryDrawer(null)
     setTocOpen(false)
     setAppearanceOpen(true)
   }, [])
@@ -583,11 +734,25 @@ export function ReaderScreen({ book, onBack }: Props) {
   const handleTocItemClick = useCallback((href: string) => {
     if (!renditionRef.current) return
 
+    setDictionaryDrawer(null)
     renditionRef.current.display(href).catch((err: unknown) => {
       console.error('[ReaderScreen] Failed to navigate to TOC item:', err)
     })
     setTocOpen(false)
   }, [])
+
+  useEffect(() => {
+    if (!dictionaryDrawer) return
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setDictionaryDrawer(null)
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [dictionaryDrawer])
 
   return (
     <div
@@ -648,6 +813,12 @@ export function ReaderScreen({ book, onBack }: Props) {
           </button>
         </div>
       </div>
+
+      <DictionaryDrawer
+        state={dictionaryDrawer}
+        onClose={() => setDictionaryDrawer(null)}
+        onInstall={handleInstallDictionaryFromReader}
+      />
 
       <div
         className={`reader-drawer-overlay reader-toc-overlay ${tocOpen ? 'reader-drawer-open' : ''}`}
@@ -800,6 +971,136 @@ export function ReaderScreen({ book, onBack }: Props) {
       </div>
     </div>
   )
+}
+
+function DictionaryDrawer({
+  state,
+  onClose,
+  onInstall,
+}: {
+  state: DictionaryDrawerState | null
+  onClose: () => void
+  onInstall: () => void
+}) {
+  const visibleEntries =
+    state?.result?.status === 'found'
+      ? getVisibleDictionaryEntries(state.result.entries)
+      : []
+
+  return (
+    <div
+      className={`reader-drawer-overlay dictionary-overlay ${state ? 'reader-drawer-open' : ''}`}
+      aria-hidden={!state}
+      inert={!state}
+      onClick={onClose}
+    >
+      <aside
+        className="reader-drawer-panel dictionary-panel"
+        aria-label="Dictionary"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="reader-toc-header">
+          <div>
+            <h2>Dictionary</h2>
+            {state?.query && <p>{state.query}</p>}
+          </div>
+          <button className="btn-text reader-toc-close" onClick={onClose}>
+            ×
+          </button>
+        </header>
+
+        {!state ? null : state.loading ? (
+          <p className="dictionary-message">Looking up...</p>
+        ) : state.error ? (
+          <p className="dictionary-message">{state.error}</p>
+        ) : state.result?.status === 'not_installed' ? (
+          <div className="dictionary-empty">
+            <p>English dictionary is not installed.</p>
+            <p>Download it for offline lookup?</p>
+            {state.installProgress && (
+              <p className="dictionary-progress">
+                {formatDictionaryStage(state.installProgress.stage)}{' '}
+                {state.installProgress.percent}%
+              </p>
+            )}
+            <div className="dictionary-actions">
+              <button
+                className="btn-primary"
+                disabled={state.installing}
+                onClick={onInstall}
+              >
+                {state.installing ? 'Downloading...' : 'Download'}
+              </button>
+              <button
+                className="btn-text"
+                disabled={state.installing}
+                onClick={onClose}
+              >
+                Not Now
+              </button>
+            </div>
+          </div>
+        ) : state.result?.status === 'found' ? (
+          <div className="dictionary-definition">
+            <h3>{state.result.query}</h3>
+            {state.result.lemma.toLowerCase() !==
+              state.result.normalizedQuery && (
+              <p className="dictionary-lemma">
+                {state.result.lemma}
+              </p>
+            )}
+            {visibleEntries.map((entry, index) => (
+              <section key={`${entry.pos}-${index}`}>
+                <h4>{entry.pos}</h4>
+                <ul>
+                  {entry.definitions.map((definition) => (
+                    <li key={definition}>{definition}</li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="dictionary-empty">
+            <h3>{state.query}</h3>
+            <p>No definition found.</p>
+          </div>
+        )}
+      </aside>
+    </div>
+  )
+}
+
+function getVisibleDictionaryEntries(entries: DictionaryDefinitionGroup[]) {
+  const visible: DictionaryDefinitionGroup[] = []
+  let definitionCount = 0
+
+  for (const entry of entries) {
+    if (visible.length >= MAX_DICTIONARY_GROUPS) break
+    const remaining = MAX_DICTIONARY_DEFINITIONS - definitionCount
+    if (remaining <= 0) break
+
+    const definitions = entry.definitions.slice(0, remaining)
+    if (definitions.length === 0) continue
+
+    visible.push({ ...entry, definitions })
+    definitionCount += definitions.length
+  }
+
+  return visible
+}
+
+function formatDictionaryStage(stage: DictionaryInstallProgress['stage']): string {
+  switch (stage) {
+    case 'downloading':
+      return 'Downloading'
+    case 'verifying':
+      return 'Verifying'
+    case 'installing':
+      return 'Installing'
+    case 'complete':
+      return 'Installed'
+  }
 }
 
 function ReaderTocItem({

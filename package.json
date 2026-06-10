@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "dictionary:build": "node scripts/dictionary/build-oewn-dictionary.mjs",
+    "dictionary:verify": "node scripts/dictionary/verify-oewn-dictionary.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

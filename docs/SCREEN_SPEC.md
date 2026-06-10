@@ -50,7 +50,7 @@ Settings
 
 # Screen Inventory
 
-ReadAway MVP contains exactly seven screens and two reader panels.
+ReadAway MVP contains exactly seven screens and three reader panels.
 
 Screens:
 
@@ -66,6 +66,7 @@ Reader panels:
 
 8. Table of Contents Panel
 9. Appearance Panel
+10. Dictionary Panel
 
 No additional screens should be introduced without updating this document.
 
@@ -279,6 +280,15 @@ Swipe right: Previous Page
 Swipe gestures must ignore mostly vertical movement and must not run while
 reader panels are open.
 
+Text selection:
+
+```text
+Select word: Dictionary Lookup
+```
+
+Only single-word lookup is supported. Multi-word, full-line, or
+multi-paragraph selections must not open the Dictionary Panel.
+
 ---
 
 ## Reader Controls
@@ -322,7 +332,6 @@ Remember:
 * Page color
 * Font size
 * Preferred layout
-* Page turn animation preference
 
 Automatically save progress:
 
@@ -423,9 +432,7 @@ Two columns are available on larger screens.
 
 ## Page Turn
 
-```text
-Slide Animation [toggle]
-```
+No page-turn animation setting is shown.
 
 ---
 
@@ -449,7 +456,78 @@ Tap outside
 
 ---
 
-# 6. Settings Screen
+# 6. Dictionary Panel
+
+Purpose:
+
+Show a compact definition for a selected word without leaving the reader.
+
+Presentation:
+
+Right-side panel.
+
+Not a separate screen.
+
+Opening and closing must animate smoothly.
+
+---
+
+## Installed Dictionary State
+
+```text
+Dictionary
+
+selected word
+base word, when different
+
+part of speech
+definition
+definition
+definition
+```
+
+Show at most three definition groups or five total definitions in the panel.
+
+Examples and synonyms may be stored but are not required in the first panel UI.
+
+---
+
+## Dictionary Not Installed State
+
+```text
+English dictionary is not installed.
+
+Download it for offline lookup?
+
+[Download]
+[Not Now]
+```
+
+The prompt must be dismissible and must not block reading permanently.
+
+---
+
+## No Definition State
+
+```text
+No definition found.
+```
+
+---
+
+## Dismiss
+
+Close the panel when:
+
+* User taps outside.
+* User turns the page.
+* User opens Table of Contents.
+* User opens Appearance.
+* User presses Escape.
+
+---
+
+# 7. Settings Screen
 
 Purpose:
 
@@ -472,6 +550,17 @@ Library
 Back Up Library
 Restore Library
 ```
+
+Dictionary
+
+```text
+English Dictionary
+Open English WordNet
+Downloaded size / Installed size
+[Download] or [Remove]
+```
+
+When installed, Settings must show source, version, license, and attribution.
 
 ```text id="jlwmqt"
 Install ReadAway
@@ -498,7 +587,7 @@ Do not add:
 
 ---
 
-# 7. Back Up Library Screen
+# 8. Back Up Library Screen
 
 Purpose:
 
@@ -541,7 +630,7 @@ Native browser save dialog opens.
 
 ---
 
-# 8. Restore Library Screen
+# 9. Restore Library Screen
 
 Purpose:
 

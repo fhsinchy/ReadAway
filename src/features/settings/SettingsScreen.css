@@ -124,6 +124,53 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
+.settings-dictionary-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--app-text-muted);
+}
+
+.settings-progress {
+  position: relative;
+  min-height: 28px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--app-surface-subtle);
+  color: var(--app-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.settings-progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--app-primary);
+  opacity: 0.28;
+}
+
+.settings-progress span {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-error {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--app-text-muted);
+}
+
+.settings-inline-button {
+  align-self: flex-start;
+}
+
 /* ============================================================
    Backup / Restore Screens
    ============================================================ */

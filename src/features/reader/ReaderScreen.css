@@ -245,6 +245,10 @@
   background: #1c1c1e;
 }
 
+.dictionary-panel {
+  width: min(380px, calc(100vw - 24px));
+}
+
 .reader-toc-header {
   display: flex;
   align-items: center;
@@ -324,6 +328,113 @@
 .reader-theme-dark .reader-toc-item:hover,
 .reader-theme-black .reader-toc-item:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* Dictionary drawer */
+.dictionary-message,
+.dictionary-empty,
+.dictionary-definition {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.dictionary-message,
+.dictionary-empty {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.reader-theme-dark .dictionary-message,
+.reader-theme-black .dictionary-message,
+.reader-theme-dark .dictionary-empty,
+.reader-theme-black .dictionary-empty {
+  color: #c7c7cc;
+}
+
+.dictionary-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dictionary-definition h3,
+.dictionary-empty h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+
+.reader-theme-dark .dictionary-definition h3,
+.reader-theme-black .dictionary-definition h3,
+.reader-theme-dark .dictionary-empty h3,
+.reader-theme-black .dictionary-empty h3 {
+  color: #f2f2f3;
+}
+
+.dictionary-lemma {
+  margin-top: 4px;
+  color: #666;
+  font-size: 13px;
+}
+
+.reader-theme-dark .dictionary-lemma,
+.reader-theme-black .dictionary-lemma {
+  color: #aaa;
+}
+
+.dictionary-definition section {
+  margin-top: 18px;
+}
+
+.dictionary-definition h4 {
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.reader-theme-dark .dictionary-definition h4,
+.reader-theme-black .dictionary-definition h4 {
+  color: #aaa;
+}
+
+.dictionary-definition ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 18px;
+}
+
+.dictionary-definition li {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1c1c1e;
+}
+
+.reader-theme-dark .dictionary-definition li,
+.reader-theme-black .dictionary-definition li {
+  color: #e5e5e5;
+}
+
+.dictionary-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.dictionary-progress {
+  font-size: 12px;
+  color: #777;
+}
+
+.reader-theme-dark .dictionary-progress,
+.reader-theme-black .dictionary-progress {
+  color: #aaa;
 }
 
 /* ============================================================

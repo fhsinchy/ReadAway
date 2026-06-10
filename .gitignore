@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 books/
+
+# Dictionary source cache
+.cache/
+english-wordnet-2025-json.zip

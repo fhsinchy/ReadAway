@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "generatedAt": 1781096752806,
+  "dictionaries": [
+    {
+      "id": "en-oewn-2025",
+      "language": "en",
+      "title": "English Dictionary",
+      "sourceName": "Open English WordNet",
+      "sourceVersion": "2025",
+      "license": "CC-BY 4.0",
+      "attribution": "Open English WordNet contributors",
+      "url": "/dictionaries/en-oewn-2025.rawaydict",
+      "sha256": "6ccd0d77f15cb4d42b05d3ba159db1f752bd7d476c503104fad0297c435212be",
+      "sizeBytes": 9340085,
+      "entryCount": 127311,
+      "formCount": 382809
+    }
+  ]
+}

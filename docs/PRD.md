@@ -121,6 +121,7 @@ ReadAway uses:
 
 * IndexedDB for metadata and progress.
 * OPFS (Origin Private File System) for EPUB files when available.
+* IndexedDB for installed dictionary indexes.
 
 If OPFS is unavailable, EPUBs may be stored using IndexedDB.
 
@@ -162,7 +163,7 @@ Features:
 * Full screen reading when supported by the browser
 * Adjustable font size
 * Single-column and two-column layout on eligible screens
-* Optional slide animation for user-driven page turns
+* English dictionary lookup from selected words
 * Resume reading automatically
 
 The single-column reader uses a fixed, comfortable text width. User-adjustable
@@ -178,6 +179,37 @@ Progress is saved:
 * On page changes
 * When the application backgrounds
 * Before the browser tab closes
+
+---
+
+# Dictionary
+
+ReadAway supports one English monolingual dictionary for the first dictionary
+release.
+
+Dictionary requirements:
+
+* Source data is Open English WordNet.
+* Dictionary data is packaged into a ReadAway-owned `.rawaydict` static asset.
+* Users explicitly download/install the dictionary from ReadAway.
+* Manual dictionary file import is not supported.
+* Dictionary lookup works offline after installation.
+* Dictionary data is stored separately from books and reading progress.
+* Dictionary data is not included in `.raway` library backups.
+* Attribution and license information are visible in Settings.
+
+Lookup behavior:
+
+* User selects a word in the reader.
+* ReadAway normalizes the selected word.
+* ReadAway first checks exact dictionary entries.
+* If no exact entry exists, ReadAway checks a generated form map.
+* If no form-map entry exists, ReadAway applies conservative local
+  lemmatization rules.
+* If no definition is found, ReadAway shows a clear no-definition state.
+
+If no dictionary is installed, selecting a word may show a dismissible prompt to
+download the English dictionary for offline lookup.
 
 ---
 
@@ -250,6 +282,7 @@ Requirements:
 * Core application shell available offline.
 * Previously imported books available offline.
 * Reading progress preserved offline.
+* Installed dictionaries available offline.
 
 ---
 
@@ -353,7 +386,6 @@ The following are explicitly out of scope for the MVP:
 * MOBI support
 * Highlights
 * Notes
-* Dictionaries
 * Text-to-speech
 * Social features
 * Accounts
