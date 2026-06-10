@@ -4,11 +4,9 @@ import type { ReaderLayout, Theme } from '@/types'
 const THEME_STORAGE_KEY = 'readaway-theme'
 const FONT_SIZE_STORAGE_KEY = 'readaway-font-size'
 const READER_LAYOUT_STORAGE_KEY = 'readaway-reader-layout'
-const PAGE_TURN_ANIMATION_STORAGE_KEY = 'readaway-page-turn-animation'
 
 const DEFAULT_FONT_SIZE = 16
 const DEFAULT_READER_LAYOUT: ReaderLayout = 'single'
-const DEFAULT_PAGE_TURN_ANIMATION = true
 
 export function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light'
@@ -37,15 +35,6 @@ export function useTheme() {
     return DEFAULT_READER_LAYOUT
   })
 
-  const [pageTurnAnimation, setPageTurnAnimationState] = useState<boolean>(
-    () => {
-      const stored = localStorage.getItem(PAGE_TURN_ANIMATION_STORAGE_KEY)
-      if (stored === 'on') return true
-      if (stored === 'off') return false
-      return DEFAULT_PAGE_TURN_ANIMATION
-    },
-  )
-
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     localStorage.setItem(THEME_STORAGE_KEY, t)
@@ -62,14 +51,6 @@ export function useTheme() {
     localStorage.setItem(READER_LAYOUT_STORAGE_KEY, layout)
   }, [])
 
-  const setPageTurnAnimation = useCallback((enabled: boolean) => {
-    setPageTurnAnimationState(enabled)
-    localStorage.setItem(
-      PAGE_TURN_ANIMATION_STORAGE_KEY,
-      enabled ? 'on' : 'off',
-    )
-  }, [])
-
   useEffect(() => {
     document.documentElement.style.setProperty(
       '--reader-font-size',
@@ -84,7 +65,5 @@ export function useTheme() {
     setFontSize,
     readerLayout,
     setReaderLayout,
-    pageTurnAnimation,
-    setPageTurnAnimation,
   }
 }

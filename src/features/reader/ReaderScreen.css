@@ -53,39 +53,6 @@
   width: min(calc(100% - 24px), 1180px);
 }
 
-.reader-page-turn-next .reader-viewer {
-  animation: reader-page-slide-next 260ms ease-out;
-}
-
-.reader-page-turn-prev .reader-viewer {
-  animation: reader-page-slide-prev 260ms ease-out;
-}
-
-@keyframes reader-page-slide-next {
-  from {
-    transform: translateX(calc(-50% + 22px));
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes reader-page-slide-prev {
-  from {
-    transform: translateX(calc(-50% - 22px));
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reader-page-turn-next .reader-viewer,
-  .reader-page-turn-prev .reader-viewer {
-    animation: none;
-  }
-}
-
 /* Controls */
 .reader-controls {
   position: absolute;
@@ -639,69 +606,6 @@
       transparent 18px 24px,
       currentColor 24px 42px
     );
-}
-
-/* Page turn setting */
-.page-turn-setting {
-  display: flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  color: #1c1c1e;
-  font-size: 14px;
-}
-
-.reader-theme-dark .page-turn-setting,
-.reader-theme-black .page-turn-setting {
-  color: #e5e5e5;
-}
-
-.page-turn-toggle {
-  position: relative;
-  width: 46px;
-  height: 26px;
-  flex: 0 0 auto;
-  border: 0;
-  border-radius: 999px;
-  background: #d8d4ca;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.page-turn-toggle span {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
-  transition: transform 0.15s ease;
-}
-
-.page-turn-toggle-active {
-  background: #1c1c1e;
-}
-
-.page-turn-toggle-active span {
-  transform: translateX(20px);
-}
-
-.reader-theme-dark .page-turn-toggle,
-.reader-theme-black .page-turn-toggle {
-  background: rgba(255, 255, 255, 0.24);
-}
-
-.reader-theme-dark .page-turn-toggle-active,
-.reader-theme-black .page-turn-toggle-active {
-  background: #e5e5e5;
-}
-
-.reader-theme-dark .page-turn-toggle span,
-.reader-theme-black .page-turn-toggle span {
-  background: #1c1c1e;
 }
 
 /* ============================================================

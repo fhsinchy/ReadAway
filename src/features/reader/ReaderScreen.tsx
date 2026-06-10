@@ -28,7 +28,6 @@ interface Props {
 const MIN_FONT_SIZE = 12
 const MAX_FONT_SIZE = 28
 const FONT_SIZE_STEP = 1
-const PAGE_TURN_ANIMATION_MS = 260
 const SWIPE_MIN_DISTANCE = 50
 const SWIPE_AXIS_RATIO = 1.5
 const TWO_COLUMN_MIN_WIDTH = 840
@@ -50,11 +49,6 @@ function isTwoColumnEligible(width: number, height: number): boolean {
 function getInitialTwoColumnEligibility(): boolean {
   if (typeof window === 'undefined') return false
   return isTwoColumnEligible(window.innerWidth, window.innerHeight)
-}
-
-function shouldReduceMotion(): boolean {
-  if (typeof window === 'undefined') return true
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 type FullscreenCapableElement = HTMLElement & {
@@ -167,8 +161,6 @@ export function ReaderScreen({ book, onBack }: Props) {
   const effectIdRef = useRef(0)
   const appearanceOpenRef = useRef(false)
   const tocOpenRef = useRef(false)
-  const pageTurnInFlightRef = useRef(false)
-  const pageTurnTimeoutRef = useRef<number | null>(null)
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
   const {
     theme,
@@ -177,16 +169,11 @@ export function ReaderScreen({ book, onBack }: Props) {
     setFontSize,
     readerLayout,
     setReaderLayout,
-    pageTurnAnimation,
-    setPageTurnAnimation,
   } = useTheme()
   const [twoColumnEligible, setTwoColumnEligible] = useState(
     getInitialTwoColumnEligibility,
   )
   const [renditionReadyId, setRenditionReadyId] = useState(0)
-  const [pageTurnDirection, setPageTurnDirection] = useState<
-    'next' | 'prev' | null
-  >(null)
   const [controlsVisible, setControlsVisible] = useState(true)
   const [pagePosition, setPagePosition] = useState<PagePosition>({
     current: 1,
@@ -257,35 +244,16 @@ export function ReaderScreen({ book, onBack }: Props) {
   const navigatePage = useCallback(
     (direction: 'next' | 'prev') => {
       const rendition = renditionRef.current
-      if (!rendition || pageTurnInFlightRef.current) return
+      if (!rendition) return
 
       const turnPage = () =>
         direction === 'prev' ? rendition.prev() : rendition.next()
 
-      if (!pageTurnAnimation || shouldReduceMotion()) {
-        turnPage()
-        return
-      }
-
-      pageTurnInFlightRef.current = true
-      setPageTurnDirection(null)
-
-      window.requestAnimationFrame(() => {
-        setPageTurnDirection(direction)
-      })
-
-      turnPage().finally(() => {
-        if (pageTurnTimeoutRef.current !== null) {
-          window.clearTimeout(pageTurnTimeoutRef.current)
-        }
-        pageTurnTimeoutRef.current = window.setTimeout(() => {
-          setPageTurnDirection(null)
-          pageTurnInFlightRef.current = false
-          pageTurnTimeoutRef.current = null
-        }, PAGE_TURN_ANIMATION_MS)
+      turnPage().catch((err: unknown) => {
+        console.debug('[ReaderScreen] Page turn failed:', err)
       })
     },
-    [pageTurnAnimation],
+    [],
   )
 
   const handleKeyboardPageTurn = useCallback(
@@ -334,14 +302,6 @@ export function ReaderScreen({ book, onBack }: Props) {
     },
     [navigatePage],
   )
-
-  useEffect(() => {
-    return () => {
-      if (pageTurnTimeoutRef.current !== null) {
-        window.clearTimeout(pageTurnTimeoutRef.current)
-      }
-    }
-  }, [])
 
   useEffect(() => {
     const viewer = viewerRef.current
@@ -632,7 +592,7 @@ export function ReaderScreen({ book, onBack }: Props) {
   return (
     <div
       ref={readerRef}
-      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout} ${pageTurnDirection ? `reader-page-turn-${pageTurnDirection}` : ''}`}
+      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout}`}
     >
       {/* EPUB Viewer */}
       <div ref={viewerRef} className="reader-viewer" />
@@ -834,23 +794,6 @@ export function ReaderScreen({ book, onBack }: Props) {
                   Two columns are available on larger screens.
                 </p>
               )}
-            </div>
-
-            {/* Page Turn */}
-            <div className="appearance-section">
-              <h4>Page Turn</h4>
-              <div className="page-turn-setting">
-                <span>Slide Animation</span>
-                <button
-                  className={`page-turn-toggle ${pageTurnAnimation ? 'page-turn-toggle-active' : ''}`}
-                  type="button"
-                  aria-label="Slide page turn animation"
-                  aria-pressed={pageTurnAnimation}
-                  onClick={() => setPageTurnAnimation(!pageTurnAnimation)}
-                >
-                  <span />
-                </button>
-              </div>
             </div>
           </div>
         </aside>
