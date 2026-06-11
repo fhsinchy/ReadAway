@@ -30,7 +30,7 @@ import {
   type DictionaryInstallProgress,
 } from '@/services/DictionaryService'
 import { useTheme } from '@/hooks/useTheme'
-import { Library, Maximize2, Minimize2, List, Palette } from 'lucide-react'
+import { ALargeSmall, Library, Maximize2, Minimize2, List } from 'lucide-react'
 import './ReaderScreen.css'
 
 interface Props {
@@ -811,7 +811,7 @@ export function ReaderScreen({ book, onBack }: Props) {
               onClick={handleOpenAppearance}
               aria-label="Appearance"
             >
-              <Palette size={18} />
+              <ALargeSmall size={18} />
             </button>
           </div>
         </div>
