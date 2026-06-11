@@ -30,7 +30,7 @@ import {
   type DictionaryInstallProgress,
 } from '@/services/DictionaryService'
 import { useTheme } from '@/hooks/useTheme'
-import { Maximize2, Minimize2, List, Palette } from 'lucide-react'
+import { Book as BookIcon, Maximize2, Minimize2, List, Palette } from 'lucide-react'
 import './ReaderScreen.css'
 
 interface Props {
@@ -785,7 +785,8 @@ export function ReaderScreen({ book, onBack }: Props) {
         {/* Top bar */}
         <div className="reader-topbar">
           <button className="btn-text reader-back" onClick={onBack}>
-            ← Back
+            <BookIcon size={16} />
+            Library
           </button>
           <span className="reader-book-title">{bookTitle}</span>
           <div className="reader-topbar-actions">
