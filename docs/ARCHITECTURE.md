@@ -622,6 +622,66 @@ Choose the simpler UI.
 
 ---
 
+# Design Tokens
+
+ReadAway uses the freeCodeCamp Command-line Chic semantic color tokens.
+
+## Token Policy
+
+All application chrome, controls, panels, and surfaces must use the fCC
+semantic variables defined in `src/index.css`. Hardcoded hex or rgba color
+values are not permitted in component CSS files with exactly one exception:
+
+**Reader page colors** (light `#FAF8F2`, dark `#1C1C1E`, black `#000000`)
+are user reading preferences and may remain hardcoded in:
+
+* `src/services/ReaderService.ts` — epub.js theme registration.
+* `src/features/reader/ReaderScreen.css` — `.reader-theme-*` container
+  background classes.
+* `src/types/index.ts` — `PAGE_COLORS` constant.
+
+## Token Architecture
+
+Tokens are structured in three layers:
+
+1. **Primitives** (`--gray-*`, `--yellow-gold`, `--blue-mid`, etc.) — raw
+   color values defined on `html`.
+2. **Semantic mappings** (`--primary-background`, `--highlight-color`, etc.) —
+   swapped per theme under `[data-app-theme='dark']` and
+   `[data-app-theme='light']`.
+3. **App aliases** (`--app-bg`, `--app-text`, `--app-primary`, etc.) —
+   convenience layer that maps to semantic tokens for concise component use.
+
+Components must reference the **app alias layer** or the **semantic layer**,
+never primitive tokens directly.
+
+## Theme Switching
+
+The resolved app theme is stored in `data-app-theme` on `<html>`. The reader
+page color (`reader-theme-light/dark/black`) is a separate CSS class on the
+reader container and does not affect app chrome.
+
+---
+
+# Accessibility Requirements
+
+ReadAway targets the freeCodeCamp Command-line Chic accessibility standard:
+
+* **Contrast**: 7:1 minimum for body text on backgrounds (WCAG AAA).
+* **Typography**: 18px base font size for application UI.
+* **Focus**: `:focus-visible` outline (2px solid `#198eee`) on all
+  interactive elements.
+* **Touch targets**: 44px minimum height for buttons and controls.
+* **Keyboard navigation**: Every interactive element reachable and operable.
+  Drawer panels must close via Escape key.
+* **Screen readers**: Icon-only or visually abbreviated controls must have
+  `aria-label` attributes. Drawer panels must use `aria-hidden` + `inert`
+  when closed.
+* **Accessible signaling**: Color is paired with text or icons; never used
+  as the sole differentiator.
+
+---
+
 # Testing Expectations
 
 Every completed feature should include:

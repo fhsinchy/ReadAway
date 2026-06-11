@@ -73,7 +73,7 @@ export function ExportBooksScreen({ onBack }: Props) {
       {phase === 'select' && (
         <>
           <div className="export-content">
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <div className="export-toolbar">
               <button className="btn-text" onClick={selectAll}>
                 Select All
               </button>
@@ -116,18 +116,18 @@ export function ExportBooksScreen({ onBack }: Props) {
       )}
 
       {phase === 'exporting' && (
-        <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <p style={{ color: 'var(--app-text-subtle)' }}>Creating backup...</p>
+        <div className="export-content export-status">
+          <p>Creating backup...</p>
         </div>
       )}
 
       {phase === 'done' && (
-        <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
+        <div className="export-content export-status">
           <h2>Backup created successfully.</h2>
-          <p style={{ color: 'var(--app-text-muted)', marginTop: 8 }}>
+          <p>
             Your browser's save dialog should appear shortly.
           </p>
-          <button className="btn-primary" onClick={onBack} style={{ marginTop: 16 }}>
+          <button className="btn-primary" onClick={onBack}>
             Back to Settings
           </button>
         </div>

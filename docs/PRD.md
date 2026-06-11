@@ -273,6 +273,55 @@ It does not override the reader page color.
 
 ---
 
+# Design System
+
+ReadAway uses the **freeCodeCamp Command-line Chic** design language.
+
+## Visual Identity
+
+ReadAway is a freeCodeCamp-aligned offline reader for public-domain books,
+with local ownership, private progress, and a developer-tool-inspired
+interface.
+
+## App Theme: Dark-First
+
+The default unresolved app shell is dark. The Command-line Chic dark palette
+is the primary designed experience. Light mode is supported via mirrored
+semantic tokens and must maintain equivalent contrast.
+
+```text
+App theme: dark (default, user-configurable)
+Reader page color: user preference (independent of app theme)
+```
+
+## Design Tokens
+
+All application UI uses fCC semantic color tokens defined in `src/index.css`.
+Hardcoded hex or rgba colors are not permitted in component CSS except for
+the documented reader page colors (light `#FAF8F2`, dark `#1C1C1E`, black
+`#000000`) which are user reading preferences, not app chrome.
+
+## Semantic Accent Roles
+
+| Accent | Role |
+|--------|------|
+| Yellow | Primary actions, CTAs |
+| Blue   | Links, interactive states, selected controls |
+| Green  | Success, completed, installed states |
+| Red    | Errors, destructive actions, failed states |
+| Purple | Rare emphasis or developer metadata |
+
+## Typography
+
+* App base font size: 18px (16px on viewports below 500px).
+* App body font: Lato if bundled locally; otherwise system sans-serif.
+* Technical labels: Hack-ZeroSlash if bundled locally; otherwise Fira Mono,
+  Menlo, Consolas, monospace.
+* EPUB content typography is controlled by reader appearance settings and
+  epub.js themes, not by the app chrome.
+
+---
+
 # Offline Support
 
 ReadAway is installable as a PWA.

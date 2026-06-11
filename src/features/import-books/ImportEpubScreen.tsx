@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import type { Book } from '@/types'
 import { importEpub } from '@/services/ImportService'
+import './ImportEpubScreen.css'
 
 interface Props {
   onBack: () => void
@@ -52,7 +53,7 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
       />
 
       {state.phase === 'choose' && (
-        <div className="import-epub-choose">
+        <div className="import-epub-panel">
           <h2>Import EPUB</h2>
           <p>Select an EPUB file from Standard Ebooks or Project Gutenberg.</p>
           <button className="btn-primary" onClick={handleChooseFile}>
@@ -65,7 +66,7 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
       )}
 
       {state.phase === 'importing' && (
-        <div className="import-epub-importing">
+        <div className="import-epub-panel import-epub-importing">
           <p>Importing...</p>
         </div>
       )}
@@ -73,8 +74,8 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
       {state.phase === 'success' && (
         <div className="import-epub-success">
           <h2>Book imported successfully.</h2>
-          <p>{state.book.title}</p>
-          <p>{state.book.author}</p>
+          <p className="import-epub-book-title">{state.book.title}</p>
+          <p className="import-epub-book-author">{state.book.author}</p>
           <div className="import-epub-success-actions">
             <button
               className="btn-primary"

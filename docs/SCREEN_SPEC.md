@@ -745,3 +745,56 @@ If a UI decision is unclear:
 > Choose the simpler option.
 
 The reader experience should always take precedence over feature discoverability.
+
+---
+
+# Visual Language
+
+ReadAway uses the freeCodeCamp Command-line Chic design system.
+
+## Application Chrome
+
+All non-reader application UI (library, settings, backup, restore, import)
+follows the fCC dark-first palette:
+
+* Dark surface backgrounds (`--primary-background`, `--secondary-background`).
+* High-contrast white or near-white text (`--primary-color`, `--tertiary-color`).
+* Yellow primary CTAs and gold accent for actions.
+* Blue links and interactive controls.
+* Green success states.
+* Red warning and destructive states.
+* Monospace section labels for developer-tool character.
+* 18px base body text with reviewed compact exceptions for metadata.
+
+## Reader Chrome
+
+The reader topbar, bottombar, and drawer panels use the same fCC app theme
+colors, not the reader page color. This ensures the chrome remains stable
+when the user changes the EPUB page color preference.
+
+## Reader Page Color
+
+Reader page colors (light `#FAF8F2`, dark `#1C1C1E`, black `#000000`)
+are user-configured preferences that only affect the EPUB content viewport.
+They are exempt from the fCC semantic token requirement.
+
+## Reader Panels
+
+TOC, Appearance, and Dictionary panels share a unified drawer language:
+
+* fCC surface background (`--app-surface`).
+* fCC border (`--app-border`).
+* fCC text tokens for all copy.
+* Blue (`--highlight-color`) for selected page-color, layout, and font-slider
+  active states.
+* 16-18px panel text.
+* Escape key and a labeled close button dismiss any panel.
+
+## Accessibility
+
+* 7:1 contrast target for body text.
+* `:focus-visible` outlines on all interactive elements (blue-mid `#198eee`).
+* 44px minimum touch targets for interactive controls.
+* All icon-only controls carry `aria-label`.
+* Drawer panels are keyboard-dismissable via Escape.
+* Closed drawers use `inert` + `aria-hidden` to prevent keyboard focus escape.

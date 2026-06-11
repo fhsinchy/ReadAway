@@ -1,0 +1,112 @@
+/* ============================================================
+   Import EPUB Screen
+   ============================================================ */
+
+.import-epub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px;
+  background: var(--app-bg);
+}
+
+.import-epub-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.import-epub h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.import-epub p {
+  font-size: 1rem;
+  color: var(--app-text-muted);
+  max-width: 340px;
+  line-height: 1.5;
+}
+
+.import-epub .btn-primary,
+.import-epub .btn-text {
+  margin: 4px 0;
+}
+
+/* Choose state */
+.import-epub-choose {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Importing state */
+.import-epub-importing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-epub-importing p {
+  font-size: 1rem;
+  color: var(--app-text-subtle);
+}
+
+/* Success state */
+.import-epub-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-epub-success h2 {
+  color: var(--app-success);
+}
+
+.import-epub-success .import-epub-book-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.import-epub-success .import-epub-book-author {
+  font-size: 0.9rem;
+  color: var(--app-text-muted);
+}
+
+.import-epub-success p {
+  margin-bottom: 4px;
+}
+
+.import-epub-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+/* Error state */
+.import-epub-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-epub-error h2 {
+  color: var(--app-danger);
+}
+
+.import-epub-error p {
+  color: var(--app-text-muted);
+}

@@ -114,6 +114,9 @@ Only Standard Ebooks and Project Gutenberg EPUBs are accepted. All others are re
 - No bottom navigation bars, floating action buttons, onboarding, or promotional elements
 - Reader experience takes precedence over feature discoverability
 - When in doubt, choose the simpler option
+- App chrome follows freeCodeCamp Command-line Chic design language
+- Reader page color is independent of app chrome; use fCC semantic tokens for chrome,
+  reader page colors for the EPUB viewport only
 
 ---
 
@@ -128,10 +131,46 @@ Critical paths requiring tests:
 
 ## Documentation
 Before implementing any feature, review:
-1. `docs/PRD.md` — Product requirements
-2. `docs/SCREEN_SPEC.md` — Screen specifications
-3. `docs/ARCHITECTURE.md` — Architecture guide
-4. Context7 (`find-docs` skill) for external library APIs
+1. `docs/PRD.md` — Product requirements (includes fCC design system policy)
+2. `docs/SCREEN_SPEC.md` — Screen specifications (includes visual language rules)
+3. `docs/ARCHITECTURE.md` — Architecture guide (includes token and accessibility policies)
+4. `docs/FCC_COMMAND_LINE_CHIC_MIGRATION_PLAN.md` — fCC migration plan
+5. Context7 (`find-docs` skill) for external library APIs
+6. `.agents/skills/command-line-chic/SKILL.md` — freeCodeCamp design guidelines
+
+---
+
+## Design System
+
+ReadAway uses the **freeCodeCamp Command-line Chic** design language.
+
+### Skill
+Before any UI work, review the `command-line-chic` skill:
+
+`.agents/skills/command-line-chic/SKILL.md`
+
+### Token Policy
+All app chrome uses fCC semantic tokens from `src/index.css`. Hardcoded
+colors are forbidden in component CSS with one documented exception:
+
+**Reader page colors** (light `#FAF8F2`, dark `#1C1C1E`, black `#000000`)
+are user reading preferences and may remain hardcoded. They must never be
+used for app chrome, drawers, navigation, or any non-viewport surface.
+
+### Visual Identity
+- App chrome is dark-first (fCC dark palette).
+- Reader chrome (topbar, bottombar, drawers) uses app theme colors, not
+  reader page colors.
+- Yellow primary CTAs, blue interactive states, green success, red danger.
+- 18px base body text.
+- Global `:focus-visible` with blue-mid outline.
+
+### Reference Documents
+- `docs/PRD.md` — Product requirements.
+- `docs/SCREEN_SPEC.md` — Screen specifications with visual language rules.
+- `docs/ARCHITECTURE.md` — Architecture guide with token and accessibility
+  policies.
+- `docs/FCC_COMMAND_LINE_CHIC_MIGRATION_PLAN.md` — Full migration plan.
 
 ---
 

@@ -90,9 +90,9 @@ export function ImportArchiveScreen({ onBack }: Props) {
       />
 
       {phase === 'choose' && (
-        <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
+        <div className="export-content export-status">
           <h2>Restore Library</h2>
-          <p style={{ color: 'var(--app-text-muted)', marginTop: 8, marginBottom: 16 }}>
+          <p>
             Select a ReadAway backup to restore books and reading progress.
           </p>
           <button className="btn-primary" onClick={handleChooseFile}>
@@ -104,7 +104,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
       {phase === 'preview' && preview && (
         <>
           <div className="export-content">
-            <p style={{ fontSize: 13, color: 'var(--app-text-subtle)', marginBottom: 12 }}>
+            <p className="export-summary">
               {preview.manifest.books.length} book{preview.manifest.books.length !== 1 ? 's' : ''} in backup
             </p>
 
@@ -152,31 +152,30 @@ export function ImportArchiveScreen({ onBack }: Props) {
       )}
 
       {phase === 'importing' && (
-        <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
-          <p style={{ color: 'var(--app-text-subtle)' }}>Restoring library...</p>
+        <div className="export-content export-status">
+          <p>Restoring library...</p>
         </div>
       )}
 
       {phase === 'done' && result && (
-        <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
+        <div className="export-content export-status">
           <h2>Library restored successfully.</h2>
-          <p style={{ color: 'var(--app-text-muted)', marginTop: 8 }}>
+          <p>
             {result.imported} restored{result.skipped > 0 ? `, ${result.skipped} skipped` : ''}
           </p>
-          <button className="btn-primary" onClick={onBack} style={{ marginTop: 16 }}>
+          <button className="btn-primary" onClick={onBack}>
             Back to Settings
           </button>
         </div>
       )}
 
       {phase === 'error' && (
-        <div className="export-content" style={{ textAlign: 'center', paddingTop: 64 }}>
+        <div className="export-content export-status">
           <h2>Restore Failed</h2>
-          <p style={{ color: 'var(--app-text-muted)', marginTop: 8 }}>{errorMsg}</p>
+          <p>{errorMsg}</p>
           <button
             className="btn-primary"
             onClick={() => setPhase('choose')}
-            style={{ marginTop: 16 }}
           >
             Try Again
           </button>

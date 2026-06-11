@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "command-line-chic": {
+      "source": "freeCodeCamp/fCC-AI-Marketplace",
+      "sourceType": "github",
+      "skillPath": "skills/command-line-chic/SKILL.md",
+      "computedHash": "539fc87dc375953012f59a7af716129192e870156724fb2cda55066edc3ab4dd"
+    }
+  }
+}

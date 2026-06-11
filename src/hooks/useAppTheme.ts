@@ -15,7 +15,7 @@ function getStoredAppTheme(): AppThemeSetting {
   if (stored === 'system' || stored === 'light' || stored === 'dark') {
     return stored
   }
-  return 'system'
+  return 'dark'
 }
 
 function resolveAppTheme(setting: AppThemeSetting): AppResolvedTheme {

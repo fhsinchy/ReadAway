@@ -741,6 +741,21 @@ export function ReaderScreen({ book, onBack }: Props) {
     setTocOpen(false)
   }, [])
 
+  // Close TOC or Appearance panel on Escape
+  useEffect(() => {
+    if (!tocOpen && !appearanceOpen) return
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setTocOpen(false)
+      setAppearanceOpen(false)
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [tocOpen, appearanceOpen])
+
   useEffect(() => {
     if (!dictionaryDrawer) return
 
@@ -787,6 +802,7 @@ export function ReaderScreen({ book, onBack }: Props) {
             <button
               className="btn-text"
               onClick={handleOpenAppearance}
+              aria-label="Appearance"
             >
               Aa
             </button>
@@ -839,6 +855,7 @@ export function ReaderScreen({ book, onBack }: Props) {
             <button
               className="btn-text reader-toc-close"
               onClick={() => setTocOpen(false)}
+              aria-label="Close"
             >
               ×
             </button>
@@ -884,6 +901,7 @@ export function ReaderScreen({ book, onBack }: Props) {
             <button
               className="btn-text reader-toc-close"
               onClick={() => setAppearanceOpen(false)}
+              aria-label="Close"
             >
               ×
             </button>
@@ -1004,7 +1022,7 @@ function DictionaryDrawer({
             <h2>Dictionary</h2>
             {state?.query && <p>{state.query}</p>}
           </div>
-          <button className="btn-text reader-toc-close" onClick={onClose}>
+          <button className="btn-text reader-toc-close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </header>

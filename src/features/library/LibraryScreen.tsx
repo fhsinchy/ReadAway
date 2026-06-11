@@ -72,10 +72,10 @@ export function LibraryScreen({
       <header className="library-header">
         <h1 className="library-title">ReadAway</h1>
         <div className="library-actions">
-          <button className="btn-text" onClick={onImportEpub}>
+          <button className="btn-primary btn-nav btn-nav-primary" onClick={onImportEpub}>
             Add Book
           </button>
-          <button className="btn-text" onClick={onSettings}>
+          <button className="btn-secondary btn-nav btn-nav-secondary" onClick={onSettings}>
             Settings
           </button>
         </div>
@@ -140,7 +140,8 @@ function BookCard({
   onOpen: () => void
 }) {
   return (
-    <div
+    <button
+      type="button"
       className="book-card"
       onClick={onOpen}
     >
@@ -171,6 +172,6 @@ function BookCard({
           </div>
         )}
       </div>
-    </div>
+    </button>
   )
 }

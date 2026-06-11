@@ -224,7 +224,7 @@ export function SettingsScreen({
               <p className="settings-error">{dictionaryError}</p>
             )}
             <button
-              className="btn-primary settings-inline-button"
+              className={`${installedDictionary ? 'btn-danger' : 'btn-primary'} settings-inline-button`}
               disabled={
                 dictionaryBusy || (!installedDictionary && !dictionaryCatalogItem)
               }
