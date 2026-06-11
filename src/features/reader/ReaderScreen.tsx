@@ -30,6 +30,7 @@ import {
   type DictionaryInstallProgress,
 } from '@/services/DictionaryService'
 import { useTheme } from '@/hooks/useTheme'
+import { Maximize2, Minimize2, List, Palette } from 'lucide-react'
 import './ReaderScreen.css'
 
 interface Props {
@@ -792,19 +793,24 @@ export function ReaderScreen({ book, onBack }: Props) {
               <button
                 className="btn-text reader-fullscreen"
                 onClick={handleToggleFullscreen}
+                aria-label={fullscreenActive ? 'Exit Full Screen' : 'Full Screen'}
               >
-                {fullscreenActive ? 'Exit Full Screen' : 'Full Screen'}
+                {fullscreenActive ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
             )}
-            <button className="btn-text" onClick={handleOpenToc}>
-              Contents
+            <button
+              className="btn-text"
+              onClick={handleOpenToc}
+              aria-label="Table of Contents"
+            >
+              <List size={18} />
             </button>
             <button
               className="btn-text"
               onClick={handleOpenAppearance}
               aria-label="Appearance"
             >
-              Aa
+              <Palette size={18} />
             </button>
           </div>
         </div>
