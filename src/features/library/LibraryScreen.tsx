@@ -139,11 +139,20 @@ function BookCard({
   book: Book & { progress?: number; lastReadAt?: number }
   onOpen: () => void
 }) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    onOpen()
+  }
+
   return (
-    <button
-      type="button"
+    <article
       className="book-card"
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
+      onKeyDown={handleKeyDown}
+      aria-label={`Read ${book.title} by ${book.author}`}
     >
       {/* Cover */}
       <div className="book-card-cover">
@@ -172,6 +181,6 @@ function BookCard({
           </div>
         )}
       </div>
-    </button>
+    </article>
   )
 }

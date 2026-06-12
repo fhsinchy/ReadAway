@@ -655,6 +655,11 @@ Tokens are structured in three layers:
 Components must reference the **app alias layer** or the **semantic layer**,
 never primitive tokens directly.
 
+Overlay, shadow, hover, and active-state values also live in the app alias
+layer (`--app-overlay`, `--app-shadow`, `--app-primary-hover`,
+`--app-selected-text`, etc.) so component CSS does not need raw `rgba(...)`
+or primitive palette references.
+
 ## Theme Switching
 
 The resolved app theme is stored in `data-app-theme` on `<html>`. The reader

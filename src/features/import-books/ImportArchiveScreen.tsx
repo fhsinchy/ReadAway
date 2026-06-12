@@ -5,6 +5,7 @@ import {
   type RestorePreview,
   type RestorePreviewItem,
 } from '@/services/ExportService'
+import '@/components/ArchiveFlowScreen.css'
 
 interface Props {
   onBack: () => void
@@ -72,13 +73,13 @@ export function ImportArchiveScreen({ onBack }: Props) {
   }
 
   return (
-    <div className="export-screen">
-      <header className="export-header">
+    <div className="archive-flow-screen">
+      <header className="archive-flow-header">
         <button className="btn-text" onClick={onBack}>
           ← Back
         </button>
-        <h2 className="export-title">Restore Library</h2>
-        <div style={{ width: 50 }} />
+        <h2 className="archive-flow-title">Restore Library</h2>
+        <div className="archive-flow-header-spacer" />
       </header>
 
       <input
@@ -86,11 +87,11 @@ export function ImportArchiveScreen({ onBack }: Props) {
         type="file"
         accept=".raway,.zip"
         onChange={handleFileSelect}
-        style={{ display: 'none' }}
+        hidden
       />
 
       {phase === 'choose' && (
-        <div className="export-content export-status">
+        <div className="archive-flow-content archive-flow-status">
           <h2>Restore Library</h2>
           <p>
             Select a ReadAway backup to restore books and reading progress.
@@ -103,13 +104,13 @@ export function ImportArchiveScreen({ onBack }: Props) {
 
       {phase === 'preview' && preview && (
         <>
-          <div className="export-content">
-            <p className="export-summary">
+          <div className="archive-flow-content">
+            <p className="archive-flow-summary">
               {preview.manifest.books.length} book{preview.manifest.books.length !== 1 ? 's' : ''} in backup
             </p>
 
             {preview.items.some((item) => item.status === 'local_newer') && (
-              <div className="restore-warning">
+              <div className="archive-flow-warning">
                 <h3>Newer progress on this device</h3>
                 <p>
                   These books are unchecked so your newer local reading position is kept.
@@ -117,20 +118,20 @@ export function ImportArchiveScreen({ onBack }: Props) {
               </div>
             )}
 
-            <div className="export-book-list">
+            <div className="archive-flow-book-list">
               {preview.items.map((item) => (
                 <div
                   key={item.entry.syncKey}
-                  className={`export-book-item ${item.status === 'local_newer' ? 'restore-book-local-newer' : ''}`}
+                  className={`archive-flow-book-item ${item.status === 'local_newer' ? 'archive-flow-book-warning' : ''}`}
                 >
                   <input
                     type="checkbox"
                     checked={selectedKeys.has(item.entry.syncKey)}
                     onChange={() => toggleBook(item.entry.syncKey)}
                   />
-                  <div className="export-book-info">
-                    <div className="export-book-title">{item.entry.title}</div>
-                    <div className="export-book-author">{item.entry.author}</div>
+                  <div className="archive-flow-book-info">
+                    <div className="archive-flow-book-title">{item.entry.title}</div>
+                    <div className="archive-flow-book-author">{item.entry.author}</div>
                     <RestoreItemStatus item={item} />
                   </div>
                 </div>
@@ -138,7 +139,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
             </div>
           </div>
 
-          <div className="export-footer">
+          <div className="archive-flow-footer">
             <button
               className="btn-primary"
               disabled={selectedKeys.size === 0}
@@ -152,13 +153,13 @@ export function ImportArchiveScreen({ onBack }: Props) {
       )}
 
       {phase === 'importing' && (
-        <div className="export-content export-status">
+        <div className="archive-flow-content archive-flow-status">
           <p>Restoring library...</p>
         </div>
       )}
 
       {phase === 'done' && result && (
-        <div className="export-content export-status">
+        <div className="archive-flow-content archive-flow-status">
           <h2>Library restored successfully.</h2>
           <p>
             {result.imported} restored{result.skipped > 0 ? `, ${result.skipped} skipped` : ''}
@@ -170,7 +171,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
       )}
 
       {phase === 'error' && (
-        <div className="export-content export-status">
+        <div className="archive-flow-content archive-flow-status">
           <h2>Restore Failed</h2>
           <p>{errorMsg}</p>
           <button
@@ -190,7 +191,7 @@ function RestoreItemStatus({ item }: { item: RestorePreviewItem }) {
   const localProgress = item.localProgress
 
   return (
-    <div className="restore-book-status">
+    <div className="archive-flow-book-status">
       <span>{statusText(item)}</span>
       {item.editionMismatch && (
         <span>

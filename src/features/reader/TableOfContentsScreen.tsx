@@ -34,7 +34,7 @@ export function TableOfContentsScreen({ onBack }: Props) {
           ← Back
         </button>
         <h2 className="toc-title">Contents</h2>
-        <div style={{ width: 50 }} />
+        <div className="header-spacer" />
       </header>
 
       <div className="toc-list">

@@ -88,14 +88,21 @@ html[data-app-theme='dark'] {
   --app-text-faint: var(--gray-45);
   --app-primary: var(--yellow-gold);
   --app-primary-text: var(--gray-90);
+  --app-primary-hover: var(--yellow-light);
   --app-link: var(--highlight-color);
   --app-success: var(--success-color);
   --app-success-bg: var(--success-background);
   --app-danger: var(--danger-color);
   --app-danger-bg: var(--danger-background);
+  --app-danger-active-text: var(--primary-background);
   --app-warning-bg: var(--yellow-background);
   --app-warning-border: var(--yellow-color);
   --app-warning-subtle: color-mix(in srgb, var(--yellow-background) 68%, transparent);
+  --app-selected-text: var(--gray-00);
+  --app-overlay: rgba(10, 10, 35, 0.3);
+  --app-overlay-subtle: rgba(10, 10, 35, 0.18);
+  --app-shadow: 0 8px 28px rgba(10, 10, 35, 0.22);
+  --app-inset-border: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 
   color-scheme: dark;
 }
@@ -137,14 +144,21 @@ html[data-app-theme='light'] {
   --app-text-faint: var(--gray-45);
   --app-primary: var(--yellow-gold);
   --app-primary-text: var(--gray-90);
+  --app-primary-hover: var(--yellow-light);
   --app-link: var(--highlight-color);
   --app-success: var(--success-color);
   --app-success-bg: var(--success-background);
   --app-danger: var(--danger-color);
   --app-danger-bg: var(--danger-background);
+  --app-danger-active-text: var(--primary-background);
   --app-warning-bg: color-mix(in srgb, var(--yellow-background) 35%, var(--primary-background));
   --app-warning-border: var(--yellow-color);
   --app-warning-subtle: color-mix(in srgb, var(--yellow-background) 20%, var(--primary-background));
+  --app-selected-text: var(--gray-00);
+  --app-overlay: rgba(10, 10, 35, 0.3);
+  --app-overlay-subtle: rgba(10, 10, 35, 0.18);
+  --app-shadow: 0 8px 28px rgba(10, 10, 35, 0.14);
+  --app-inset-border: inset 0 0 0 1px rgba(10, 10, 35, 0.12);
 
   color-scheme: light;
 }
@@ -186,9 +200,33 @@ a {
   outline-offset: 2px;
 }
 
+* {
+  scrollbar-color: var(--app-text-subtle) var(--app-bg);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--app-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid var(--app-bg);
+  background: var(--app-text-subtle);
+}
+
 .app-shell {
+  height: 100dvh;
   background: var(--app-bg);
   color: var(--app-text);
+}
+
+.header-spacer {
+  width: 50px;
 }
 
 .btn-text,
@@ -196,7 +234,7 @@ a {
 .btn-secondary,
 .btn-danger {
   min-height: 44px;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
   font-weight: 600;
   line-height: 1.2;
@@ -226,8 +264,8 @@ a {
 }
 
 .btn-primary:hover {
-  background: var(--yellow-light);
-  border-color: var(--yellow-light);
+  background: var(--app-primary-hover);
+  border-color: var(--app-primary-hover);
 }
 
 .btn-secondary {
@@ -250,7 +288,7 @@ a {
 
 .btn-danger:hover {
   background: var(--app-danger);
-  color: var(--primary-background);
+  color: var(--app-danger-active-text);
 }
 
 .btn-primary:disabled,
@@ -262,13 +300,13 @@ a {
 }
 
 .btn-compact {
-  min-height: 38px;
-  padding: 5px 12px;
+  min-height: 44px;
+  padding: 6px 12px;
 }
 
 .btn-nav {
-  min-height: 38px;
-  padding: 3px 18px;
+  min-height: 44px;
+  padding: 5px 18px;
   border-radius: 0;
   font-weight: 500;
 }
@@ -280,8 +318,8 @@ a {
 }
 
 .btn-nav-primary:hover {
-  border-color: var(--yellow-light);
-  background: var(--yellow-light);
+  border-color: var(--app-primary-hover);
+  background: var(--app-primary-hover);
 }
 
 .btn-nav-secondary {

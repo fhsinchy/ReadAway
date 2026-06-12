@@ -79,7 +79,7 @@
 }
 
 .import-epub-success .import-epub-book-author {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--app-text-muted);
 }
 

@@ -49,7 +49,7 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
         type="file"
         accept=".epub"
         onChange={handleFileSelect}
-        style={{ display: 'none' }}
+        hidden
       />
 
       {state.phase === 'choose' && (

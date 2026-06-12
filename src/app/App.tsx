@@ -125,7 +125,6 @@ export function App() {
     <div
       className="app-shell"
       data-app-theme={resolvedAppTheme}
-      style={{ height: '100dvh' }}
     >
       {renderScreen()}
     </div>

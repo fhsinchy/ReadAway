@@ -125,139 +125,141 @@ export function SettingsScreen({
           ← Back
         </button>
         <h2 className="settings-title">Settings</h2>
-        <div style={{ width: 50 }} />
+        <div className="header-spacer" />
       </header>
 
-      <div className="settings-content">
-        {/* Appearance */}
-        <section className="settings-section">
-          <h3 className="settings-section-title">Appearance</h3>
-          <div className="settings-item settings-item-stacked settings-item-static">
-            <div className="settings-item-heading">
-              <span>App Theme</span>
-              <span className="settings-item-value">
-                {resolvedAppTheme === 'dark' ? 'Dark' : 'Light'}
-              </span>
-            </div>
-            <div className="settings-segmented" role="radiogroup">
-              {APP_THEME_OPTIONS.map((option) => (
-                <button
-                  key={option.key}
-                  className={`settings-segment ${appTheme === option.key ? 'settings-segment-active' : ''}`}
-                  type="button"
-                  role="radio"
-                  aria-checked={appTheme === option.key}
-                  onClick={() => onAppThemeChange(option.key)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Library */}
-        <section className="settings-section">
-          <h3 className="settings-section-title">Library</h3>
-          <button className="settings-item" onClick={onBackupLibrary}>
-            <span>Back Up Library</span>
-            <span className="settings-item-arrow">→</span>
-          </button>
-          <button className="settings-item" onClick={onRestoreLibrary}>
-            <span>Restore Library</span>
-            <span className="settings-item-arrow">→</span>
-          </button>
-        </section>
-
-        {/* Dictionary */}
-        <section className="settings-section">
-          <h3 className="settings-section-title">Dictionary</h3>
-          <div className="settings-item settings-item-stacked settings-item-static">
-            <div className="settings-item-heading">
-              <span>English Dictionary</span>
-              <span className="settings-item-value">
-                {installedDictionary ? 'Installed' : 'Not Installed'}
-              </span>
-            </div>
-            <div className="settings-dictionary-meta">
-              <span>
-                {installedDictionary?.sourceName ??
-                  dictionaryCatalogItem?.sourceName ??
-                  'Open English WordNet'}
-              </span>
-              <span>
-                {installedDictionary?.sourceVersion ??
-                  dictionaryCatalogItem?.sourceVersion ??
-                  '2025'}
-              </span>
-              <span>
-                {formatBytes(
-                  installedDictionary?.sizeBytes ??
-                    dictionaryCatalogItem?.sizeBytes ??
-                    0,
-                )}
-              </span>
-              <span>
-                {installedDictionary?.license ??
-                  dictionaryCatalogItem?.license ??
-                  'CC-BY 4.0'}
-              </span>
-              <span>
-                {installedDictionary?.attribution ??
-                  dictionaryCatalogItem?.attribution ??
-                  'Open English WordNet contributors'}
-              </span>
-            </div>
-            {dictionaryProgress && (
-              <div className="settings-progress">
-                <div
-                  className="settings-progress-bar"
-                  style={{ width: `${dictionaryProgress.percent}%` }}
-                />
-                <span>
-                  {formatDictionaryStage(dictionaryProgress.stage)}{' '}
-                  {dictionaryProgress.percent}%
+      <div className="settings-scroll">
+        <div className="settings-content">
+          {/* Appearance */}
+          <section className="settings-section">
+            <h3 className="settings-section-title">Appearance</h3>
+            <div className="settings-item settings-item-stacked settings-item-static">
+              <div className="settings-item-heading">
+                <span>App Theme</span>
+                <span className="settings-item-value">
+                  {resolvedAppTheme === 'dark' ? 'Dark' : 'Light'}
                 </span>
               </div>
-            )}
-            {dictionaryError && (
-              <p className="settings-error">{dictionaryError}</p>
-            )}
-            <button
-              className={`${installedDictionary ? 'btn-danger' : 'btn-primary'} settings-inline-button`}
-              disabled={
-                dictionaryBusy || (!installedDictionary && !dictionaryCatalogItem)
-              }
-              onClick={
-                installedDictionary
-                  ? handleRemoveDictionary
-                  : handleInstallDictionary
-              }
-            >
-              {installedDictionary ? 'Remove' : 'Download'}
-            </button>
-          </div>
-        </section>
+              <div className="settings-segmented" role="radiogroup">
+                {APP_THEME_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    className={`settings-segment ${appTheme === option.key ? 'settings-segment-active' : ''}`}
+                    type="button"
+                    role="radio"
+                    aria-checked={appTheme === option.key}
+                    onClick={() => onAppThemeChange(option.key)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
 
-        {/* Install */}
-        {installSupported && !pwaInstall.isInstalled && (
+          {/* Library */}
           <section className="settings-section">
-            <h3 className="settings-section-title">Install</h3>
-            <button className="settings-item" onClick={handleInstall}>
-              <span>Install ReadAway</span>
+            <h3 className="settings-section-title">Library</h3>
+            <button className="settings-item" onClick={onBackupLibrary}>
+              <span>Back Up Library</span>
+              <span className="settings-item-arrow">→</span>
+            </button>
+            <button className="settings-item" onClick={onRestoreLibrary}>
+              <span>Restore Library</span>
               <span className="settings-item-arrow">→</span>
             </button>
           </section>
-        )}
 
-        {/* About */}
-        <section className="settings-section">
-          <h3 className="settings-section-title">About</h3>
-          <div className="settings-item settings-item-static">
-            <span>Version</span>
-            <span className="settings-item-value">0.1.0</span>
-          </div>
-        </section>
+          {/* Dictionary */}
+          <section className="settings-section">
+            <h3 className="settings-section-title">Dictionary</h3>
+            <div className="settings-item settings-item-stacked settings-item-static">
+              <div className="settings-item-heading">
+                <span>English Dictionary</span>
+                <span className="settings-item-value">
+                  {installedDictionary ? 'Installed' : 'Not Installed'}
+                </span>
+              </div>
+              <div className="settings-dictionary-meta">
+                <span>
+                  {installedDictionary?.sourceName ??
+                    dictionaryCatalogItem?.sourceName ??
+                    'Open English WordNet'}
+                </span>
+                <span>
+                  {installedDictionary?.sourceVersion ??
+                    dictionaryCatalogItem?.sourceVersion ??
+                    '2025'}
+                </span>
+                <span>
+                  {formatBytes(
+                    installedDictionary?.sizeBytes ??
+                      dictionaryCatalogItem?.sizeBytes ??
+                      0,
+                  )}
+                </span>
+                <span>
+                  {installedDictionary?.license ??
+                    dictionaryCatalogItem?.license ??
+                    'CC-BY 4.0'}
+                </span>
+                <span>
+                  {installedDictionary?.attribution ??
+                    dictionaryCatalogItem?.attribution ??
+                    'Open English WordNet contributors'}
+                </span>
+              </div>
+              {dictionaryProgress && (
+                <div className="settings-progress">
+                  <div
+                    className="settings-progress-bar"
+                    style={{ width: `${dictionaryProgress.percent}%` }}
+                  />
+                  <span>
+                    {formatDictionaryStage(dictionaryProgress.stage)}{' '}
+                    {dictionaryProgress.percent}%
+                  </span>
+                </div>
+              )}
+              {dictionaryError && (
+                <p className="settings-error">{dictionaryError}</p>
+              )}
+              <button
+                className={`${installedDictionary ? 'btn-danger' : 'btn-primary'} settings-inline-button`}
+                disabled={
+                  dictionaryBusy || (!installedDictionary && !dictionaryCatalogItem)
+                }
+                onClick={
+                  installedDictionary
+                    ? handleRemoveDictionary
+                    : handleInstallDictionary
+                }
+              >
+                {installedDictionary ? 'Remove' : 'Download'}
+              </button>
+            </div>
+          </section>
+
+          {/* Install */}
+          {installSupported && !pwaInstall.isInstalled && (
+            <section className="settings-section">
+              <h3 className="settings-section-title">Install</h3>
+              <button className="settings-item" onClick={handleInstall}>
+                <span>Install ReadAway</span>
+                <span className="settings-item-arrow">→</span>
+              </button>
+            </section>
+          )}
+
+          {/* About */}
+          <section className="settings-section">
+            <h3 className="settings-section-title">About</h3>
+            <div className="settings-item settings-item-static">
+              <span>Version</span>
+              <span className="settings-item-value">0.1.0</span>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )

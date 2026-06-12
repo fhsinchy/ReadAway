@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Book } from '@/types'
 import { db } from '@/db'
 import { exportArchive } from '@/services/ExportService'
+import '@/components/ArchiveFlowScreen.css'
 
 interface Props {
   onBack: () => void
@@ -61,19 +62,19 @@ export function ExportBooksScreen({ onBack }: Props) {
   }, [selectedKeys])
 
   return (
-    <div className="export-screen">
-      <header className="export-header">
+    <div className="archive-flow-screen">
+      <header className="archive-flow-header">
         <button className="btn-text" onClick={onBack}>
           ← Back
         </button>
-        <h2 className="export-title">Back Up Library</h2>
-        <div style={{ width: 50 }} />
+        <h2 className="archive-flow-title">Back Up Library</h2>
+        <div className="archive-flow-header-spacer" />
       </header>
 
       {phase === 'select' && (
         <>
-          <div className="export-content">
-            <div className="export-toolbar">
+          <div className="archive-flow-content">
+            <div className="archive-flow-toolbar">
               <button className="btn-text" onClick={selectAll}>
                 Select All
               </button>
@@ -82,28 +83,28 @@ export function ExportBooksScreen({ onBack }: Props) {
               </button>
             </div>
 
-            <div className="export-book-list">
+            <div className="archive-flow-book-list">
               {books.map((book) => (
-                <div key={book.syncKey} className="export-book-item">
+                <div key={book.syncKey} className="archive-flow-book-item">
                   <input
                     type="checkbox"
                     checked={selectedKeys.has(book.syncKey)}
                     onChange={() => toggleBook(book.syncKey)}
                   />
-                  <div className="export-book-info">
-                    <div className="export-book-title">{book.title}</div>
-                    <div className="export-book-author">{book.author}</div>
+                  <div className="archive-flow-book-info">
+                    <div className="archive-flow-book-title">{book.title}</div>
+                    <div className="archive-flow-book-author">{book.author}</div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <p className="export-note">
+            <p className="archive-flow-note">
               Reading progress and timestamps are included with each selected book.
             </p>
           </div>
 
-          <div className="export-footer">
+          <div className="archive-flow-footer">
             <button
               className="btn-primary"
               disabled={selectedKeys.size === 0}
@@ -116,13 +117,13 @@ export function ExportBooksScreen({ onBack }: Props) {
       )}
 
       {phase === 'exporting' && (
-        <div className="export-content export-status">
+        <div className="archive-flow-content archive-flow-status">
           <p>Creating backup...</p>
         </div>
       )}
 
       {phase === 'done' && (
-        <div className="export-content export-status">
+        <div className="archive-flow-content archive-flow-status">
           <h2>Backup created successfully.</h2>
           <p>
             Your browser's save dialog should appear shortly.

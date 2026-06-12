@@ -139,7 +139,7 @@ Target semantic layer:
 --editor-background
 ```
 
-ReadAway's existing app aliases can temporarily map to these tokens:
+ReadAway's app aliases map chrome-specific roles to these tokens:
 
 ```css
 --app-bg: var(--primary-background);
@@ -153,9 +153,16 @@ ReadAway's existing app aliases can temporarily map to these tokens:
 --app-text-subtle: var(--gray-45);
 --app-primary: var(--yellow-gold);
 --app-primary-text: var(--gray-90);
+--app-primary-hover
+--app-selected-text
+--app-overlay
+--app-overlay-subtle
+--app-shadow
+--app-inset-border
 ```
 
-This allows a safe first pass before component-level CSS is cleaned up.
+Component CSS should use these aliases instead of primitive palette tokens or
+raw `rgba(...)` values.
 
 ## Accents
 
