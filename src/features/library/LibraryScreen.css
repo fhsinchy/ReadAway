@@ -30,8 +30,8 @@
 }
 
 .library-title {
-  font-family: var(--font-family-mono);
-  font-size: 1.1rem;
+  font-family: var(--font-family-sans);
+  font-size: 1rem;
   font-weight: 700;
   color: var(--app-text);
 }
@@ -74,12 +74,12 @@
 }
 
 .library-section-title {
-  font-family: var(--font-family-mono);
+  font-family: var(--font-family-sans);
   font-size: 1rem;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-weight: 700;
+  text-transform: none;
   letter-spacing: 0;
-  color: var(--app-text-subtle);
+  color: var(--app-text);
   margin-bottom: 12px;
 }
 
@@ -215,8 +215,9 @@
 }
 
 .progress-label {
-  font-family: var(--font-family-mono);
+  font-family: var(--font-family-sans);
   font-size: 1rem;
+  font-variant-numeric: tabular-nums;
   color: var(--app-text-subtle);
   min-width: 36px;
   text-align: right;
