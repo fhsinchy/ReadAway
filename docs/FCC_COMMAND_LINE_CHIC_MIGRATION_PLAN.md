@@ -94,20 +94,14 @@ Command-line Chic requires 18px minimum body-sized UI text.
 Migration target:
 
 * App base size: 18px.
-* App body/prose font: Lato if bundled locally; otherwise system sans as an
-  interim step.
-* Technical labels/status text: Hack-ZeroSlash if bundled locally; otherwise
-  Fira Mono, Menlo, Consolas, monospace.
+* App body/prose font: bundled Lato with system sans fallbacks.
+* Technical labels/status text: bundled Hack exposed as Hack-ZeroSlash, then
+  Fira Mono, Menlo, Consolas, monospace fallbacks.
 * EPUB content: controlled by reader theme settings and epub.js themes.
 
-Open implementation question:
-
-```text
-Should ReadAway bundle fCC fonts locally for offline-first fidelity?
-```
-
-Recommendation: yes, but after the token migration. Do not block the first UI
-pass on font bundling.
+Font bundling decision: ReadAway bundles Lato and Hack WOFF2 files under
+`public/fonts/` so the PWA preserves fCC typography offline. The bundled Hack
+files are exposed as `Hack-ZeroSlash` in CSS because Hack uses a slashed zero.
 
 ## Color Tokens
 
@@ -381,8 +375,8 @@ Tasks:
 * Increase body-sized UI copy to 18px.
 * Keep small metadata only where truly secondary, and avoid going below 16px
   except for compact progress metadata after explicit review.
-* Decide whether to bundle Lato and Hack-ZeroSlash locally.
-* If fonts are bundled, add them as static assets and define font-face rules.
+* Bundle Lato and Hack locally.
+* Add static font assets and define font-face rules.
 
 Files:
 

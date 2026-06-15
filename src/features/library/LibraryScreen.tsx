@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Book } from '@/types'
+import { Search } from 'lucide-react'
 import { useBooks } from '@/hooks/useBooks'
 import type { PwaInstallControls } from '@/hooks/usePwaInstall'
 import { db } from '@/db'
@@ -24,6 +25,9 @@ export function LibraryScreen({
   const [booksWithProgress, setBooksWithProgress] = useState<
     (Book & { progress?: number; lastReadAt?: number })[]
   >([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function load() {
@@ -50,6 +54,47 @@ export function LibraryScreen({
     load()
   }, [books])
 
+  const filteredBooks = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim()
+    if (!q) return booksWithProgress
+    return booksWithProgress.filter(
+      (book) =>
+        book.title.toLowerCase().includes(q) ||
+        book.author.toLowerCase().includes(q),
+    )
+  }, [booksWithProgress, searchQuery])
+
+  const hasBooks = booksWithProgress.length > 0
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        mobileMenuRef.current?.contains(event.target)
+      ) {
+        return
+      }
+
+      setIsMobileMenuOpen(false)
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMobileMenuOpen])
+
   // Show install prompt after library loads
   useEffect(() => {
     if (!loading && isInstallable) {
@@ -70,12 +115,69 @@ export function LibraryScreen({
     <div className="library">
       {/* App Bar */}
       <header className="library-header">
+        <div className="library-search-row">
+          <div className="library-search">
+            <Search size={18} className="library-search-icon" />
+            <input
+              type="text"
+              className="library-search-input"
+              placeholder="Search library..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search library"
+              disabled={!hasBooks}
+            />
+          </div>
+          <div className="library-mobile-menu" ref={mobileMenuRef}>
+            <button
+              className="btn-secondary btn-nav btn-nav-secondary library-menu-button"
+              type="button"
+              aria-expanded={isMobileMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
+            >
+              Menu
+            </button>
+            {isMobileMenuOpen && (
+              <div className="library-menu-popover" role="menu">
+                <button
+                  className="btn-primary btn-nav btn-nav-primary library-menu-action"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    onImportEpub()
+                  }}
+                >
+                  Add Book
+                </button>
+                <button
+                  className="btn-secondary btn-nav btn-nav-secondary library-menu-action"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    onSettings()
+                  }}
+                >
+                  Settings
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         <h1 className="library-title">ReadAway</h1>
         <div className="library-actions">
-          <button className="btn-primary btn-nav btn-nav-primary" onClick={onImportEpub}>
+          <button
+            className="btn-primary btn-nav btn-nav-primary"
+            onClick={onImportEpub}
+          >
             Add Book
           </button>
-          <button className="btn-secondary btn-nav btn-nav-secondary" onClick={onSettings}>
+          <button
+            className="btn-secondary btn-nav btn-nav-secondary"
+            onClick={onSettings}
+          >
             Settings
           </button>
         </div>
@@ -103,7 +205,7 @@ export function LibraryScreen({
 
       {/* Content */}
       <div className="library-content">
-        {booksWithProgress.length === 0 ? (
+        {!hasBooks ? (
           <div className="library-empty">
             <p>No books yet.</p>
             <p className="library-empty-sub">
@@ -114,18 +216,29 @@ export function LibraryScreen({
             </button>
           </div>
         ) : (
-          <section className="library-section">
-            <h2 className="library-section-title">Library</h2>
-            <div className="book-grid">
-              {booksWithProgress.map((book) => (
-                <BookCard
-                  key={book.syncKey}
-                  book={book}
-                  onOpen={() => onOpenBook(book)}
-                />
-              ))}
-            </div>
-          </section>
+          <>
+            {filteredBooks.length === 0 ? (
+              <div className="library-empty">
+                <p>No results found.</p>
+                <p className="library-empty-sub">
+                  Try a different search term.
+                </p>
+              </div>
+            ) : (
+              <section className="library-section">
+                <h2 className="library-section-title">Library</h2>
+                <div className="book-grid">
+                  {filteredBooks.map((book) => (
+                    <BookCard
+                      key={book.syncKey}
+                      book={book}
+                      onOpen={() => onOpenBook(book)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
       </div>
     </div>

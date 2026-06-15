@@ -313,10 +313,10 @@ the documented reader page colors (light `#FAF8F2`, dark `#1C1C1E`, black
 
 ## Typography
 
-* App base font size: 18px (16px on viewports below 500px).
-* App body font: Lato if bundled locally; otherwise system sans-serif.
-* Technical labels: Hack-ZeroSlash if bundled locally; otherwise Fira Mono,
-  Menlo, Consolas, monospace.
+* App base font size: 18px (17px on viewports below 500px).
+* App body font: bundled Lato with system sans-serif fallbacks.
+* Technical labels: bundled Hack exposed as Hack-ZeroSlash, then Fira Mono,
+  Menlo, Consolas, monospace fallbacks.
 * EPUB content typography is controlled by reader appearance settings and
   epub.js themes, not by the app chrome.
 
