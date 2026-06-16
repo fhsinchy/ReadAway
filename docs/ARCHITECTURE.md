@@ -417,6 +417,7 @@ Responsibilities:
 * Persist reading progress
 * Restore reading progress
 * Apply reader appearance settings
+* Preserve the current CFI when reader layout, margin, or viewport size changes
 
 ## DictionaryService
 

@@ -163,11 +163,13 @@ Features:
 * Full screen reading when supported by the browser
 * Adjustable font size
 * Single-column and two-column layout on eligible screens
+* Narrow, medium, and wide reader margin presets with matching line-height
 * English dictionary lookup from selected words
 * Resume reading automatically
 
-The single-column reader uses a fixed, comfortable text width. User-adjustable
-margin controls are intentionally omitted for the MVP.
+The reader offers narrow, medium, and wide margin presets. Margin presets affect
+the EPUB viewport width and line-height together so each setting remains
+readable in both single-column and two-column layouts.
 
 Two-column layout is available only when the reader surface is at least 840 CSS
 pixels wide and 480 CSS pixels tall. If the user has

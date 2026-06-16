@@ -1,12 +1,14 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { ReaderLayout, Theme } from '@/types'
+import type { ReaderLayout, ReaderMargin, Theme } from '@/types'
 
 const THEME_STORAGE_KEY = 'readaway-theme'
 const FONT_SIZE_STORAGE_KEY = 'readaway-font-size'
 const READER_LAYOUT_STORAGE_KEY = 'readaway-reader-layout'
+const READER_MARGIN_STORAGE_KEY = 'readaway-reader-margin'
 
 const DEFAULT_FONT_SIZE = 16
 const DEFAULT_READER_LAYOUT: ReaderLayout = 'single'
+const DEFAULT_READER_MARGIN: ReaderMargin = 'medium'
 
 export function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light'
@@ -35,6 +37,14 @@ export function useTheme() {
     return DEFAULT_READER_LAYOUT
   })
 
+  const [readerMargin, setReaderMarginState] = useState<ReaderMargin>(() => {
+    const stored = localStorage.getItem(READER_MARGIN_STORAGE_KEY)
+    if (stored === 'narrow' || stored === 'medium' || stored === 'wide') {
+      return stored
+    }
+    return DEFAULT_READER_MARGIN
+  })
+
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     localStorage.setItem(THEME_STORAGE_KEY, t)
@@ -51,6 +61,11 @@ export function useTheme() {
     localStorage.setItem(READER_LAYOUT_STORAGE_KEY, layout)
   }, [])
 
+  const setReaderMargin = useCallback((margin: ReaderMargin) => {
+    setReaderMarginState(margin)
+    localStorage.setItem(READER_MARGIN_STORAGE_KEY, margin)
+  }, [])
+
   useEffect(() => {
     document.documentElement.style.setProperty(
       '--reader-font-size',
@@ -65,5 +80,7 @@ export function useTheme() {
     setFontSize,
     readerLayout,
     setReaderLayout,
+    readerMargin,
+    setReaderMargin,
   }
 }

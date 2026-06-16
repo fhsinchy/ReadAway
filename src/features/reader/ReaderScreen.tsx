@@ -6,6 +6,7 @@ import type {
   DictionaryDefinitionGroup,
   DictionaryLookupResult,
   ReaderLayout,
+  ReaderMargin,
   Theme,
 } from '@/types'
 import {
@@ -15,6 +16,7 @@ import {
   restoreProgress,
   applyTheme,
   applyFontSize,
+  applyReaderMargin,
   applyReaderLayout,
   onLocationChange,
   getBookTitle,
@@ -55,6 +57,11 @@ const PAGE_COLOR_OPTIONS = [
 const LAYOUT_OPTIONS = [
   { key: 'single', label: 'Single Column', icon: ['wide', 'wide', 'wide'] },
   { key: 'two', label: 'Two Columns', icon: ['split', 'split', 'split'] },
+] as const
+const MARGIN_OPTIONS = [
+  { key: 'narrow', label: 'Narrow', icon: ['wide', 'wide', 'wide'] },
+  { key: 'medium', label: 'Medium', icon: ['medium', 'medium', 'medium'] },
+  { key: 'wide', label: 'Wide', icon: ['short', 'short', 'short'] },
 ] as const
 
 function isTwoColumnEligible(width: number, height: number): boolean {
@@ -194,6 +201,8 @@ export function ReaderScreen({ book, onBack }: Props) {
     setFontSize,
     readerLayout,
     setReaderLayout,
+    readerMargin,
+    setReaderMargin,
   } = useTheme()
   const [twoColumnEligible, setTwoColumnEligible] = useState(
     getInitialTwoColumnEligibility,
@@ -428,6 +437,7 @@ export function ReaderScreen({ book, onBack }: Props) {
         // Apply saved appearance
         applyTheme(rendition, theme)
         applyFontSize(rendition, fontSize)
+        applyReaderMargin(rendition, readerMargin)
 
         // Save progress on page change
         onLocationChange(rendition, (_locator, _pct, position) => {
@@ -595,6 +605,13 @@ export function ReaderScreen({ book, onBack }: Props) {
     }
   }, [fontSize])
 
+  // Apply margin line-height changes
+  useEffect(() => {
+    if (renditionRef.current) {
+      applyReaderMargin(renditionRef.current, readerMargin)
+    }
+  }, [readerMargin])
+
   // Apply reader layout changes
   useEffect(() => {
     const rendition = renditionRef.current
@@ -614,7 +631,7 @@ export function ReaderScreen({ book, onBack }: Props) {
     })
 
     return () => window.cancelAnimationFrame(frame)
-  }, [effectiveLayout, renditionReadyId])
+  }, [effectiveLayout, readerMargin, renditionReadyId])
 
   // Check for TOC chapter navigation target
   useEffect(() => {
@@ -645,6 +662,13 @@ export function ReaderScreen({ book, onBack }: Props) {
       setReaderLayout(layout)
     },
     [setReaderLayout, twoColumnEligible],
+  )
+
+  const handleMarginChange = useCallback(
+    (margin: ReaderMargin) => {
+      setReaderMargin(margin)
+    },
+    [setReaderMargin],
   )
 
   const handlePrev = useCallback(() => {
@@ -773,7 +797,7 @@ export function ReaderScreen({ book, onBack }: Props) {
   return (
     <div
       ref={readerRef}
-      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout}`}
+      className={`reader reader-theme-${theme} reader-layout-${effectiveLayout} reader-margin-${readerMargin}`}
     >
       {/* EPUB Viewer */}
       <div ref={viewerRef} className="reader-viewer" />
@@ -990,6 +1014,30 @@ export function ReaderScreen({ book, onBack }: Props) {
                   Two columns are available on larger screens.
                 </p>
               )}
+            </div>
+
+            {/* Margin */}
+            <div className="appearance-section">
+              <h4>Margin</h4>
+              <div className="margin-options">
+                {MARGIN_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    className={`layout-btn margin-btn ${readerMargin === option.key ? 'layout-btn-active' : ''}`}
+                    onClick={() => handleMarginChange(option.key)}
+                  >
+                    <span className="margin-btn-icon" aria-hidden="true">
+                      {option.icon.map((line, i) => (
+                        <span
+                          key={`${option.key}-${line}-${i}`}
+                          className={`layout-btn-line margin-btn-line-${line}`}
+                        />
+                      ))}
+                    </span>
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </aside>

@@ -7,7 +7,12 @@
  */
 
 import ePub, { type Book, type Rendition } from 'epubjs'
-import type { Book as LibraryBook, ReaderLayout, Theme } from '@/types'
+import type {
+  Book as LibraryBook,
+  ReaderLayout,
+  ReaderMargin,
+  Theme,
+} from '@/types'
 import { db } from '@/db'
 import { getEpub } from './BookStorageService'
 
@@ -72,6 +77,12 @@ const STANDARD_EBOOKS_HIDDEN_LABEL_SELECTOR = [
 
 const STANDARD_EBOOKS_BLACK_TRANSPARENT_IMAGE_SELECTOR =
   'img.epub-type-contains-word-se-image-color-depth-black-on-transparent'
+
+const READER_MARGIN_LINE_HEIGHTS: Record<ReaderMargin, string> = {
+  narrow: '1.42',
+  medium: '1.58',
+  wide: '1.72',
+}
 
 const READER_EPUB_NORMALIZATION_RULES: object = [
   [
@@ -245,7 +256,10 @@ export async function openBook(
       // epub.js may not have fully initialized yet (render queue still
       // processing). Silently skip — the ResizeObserver will fire again.
       try {
-        rendition.resize(r.width, r.height)
+        const location =
+          rendition.currentLocation() as unknown as ReaderLocation | null
+        const cfi = location?.start?.cfi
+        ;(rendition as CfiAwareRendition).resize(r.width, r.height, cfi)
       } catch (err) {
         console.debug('[ReaderService] Resize skipped, epub.js not ready:', err)
       }
@@ -487,6 +501,20 @@ export function applyTheme(rendition: Rendition, theme: Theme): void {
  */
 export function applyFontSize(rendition: Rendition, size: number): void {
   rendition.themes.fontSize(`${size}px`)
+}
+
+/**
+ * Apply line-height paired with the selected margin preset.
+ */
+export function applyReaderMargin(
+  rendition: Rendition,
+  margin: ReaderMargin,
+): void {
+  rendition.themes.override(
+    'line-height',
+    READER_MARGIN_LINE_HEIGHTS[margin],
+    true,
+  )
 }
 
 /**

@@ -430,6 +430,20 @@ Two columns are available on larger screens.
 
 ---
 
+## Margin
+
+```text
+Narrow
+Medium
+Wide
+```
+
+Changing margin updates the reader viewport width and EPUB line-height
+together. The selected preset is saved and applies to both single-column and
+two-column layouts.
+
+---
+
 ## Page Turn
 
 No page-turn animation setting is shown.
