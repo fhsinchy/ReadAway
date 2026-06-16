@@ -128,7 +128,7 @@ export function ExportBooksScreen({ onBack }: Props) {
           <p>
             Your browser's save dialog should appear shortly.
           </p>
-          <button className="btn-primary" onClick={onBack}>
+          <button className="btn-secondary" onClick={onBack}>
             Back to Settings
           </button>
         </div>

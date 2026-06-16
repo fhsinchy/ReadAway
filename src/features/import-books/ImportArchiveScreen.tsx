@@ -164,7 +164,7 @@ export function ImportArchiveScreen({ onBack }: Props) {
           <p>
             {result.imported} restored{result.skipped > 0 ? `, ${result.skipped} skipped` : ''}
           </p>
-          <button className="btn-primary" onClick={onBack}>
+          <button className="btn-secondary" onClick={onBack}>
             Back to Settings
           </button>
         </div>

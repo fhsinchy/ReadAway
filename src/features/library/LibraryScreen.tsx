@@ -130,7 +130,7 @@ export function LibraryScreen({
           </div>
           <div className="library-mobile-menu" ref={mobileMenuRef}>
             <button
-              className="btn-secondary btn-nav btn-nav-secondary library-menu-button"
+              className="btn-secondary btn-nav library-menu-button"
               type="button"
               aria-expanded={isMobileMenuOpen}
               aria-haspopup="menu"
@@ -141,7 +141,7 @@ export function LibraryScreen({
             {isMobileMenuOpen && (
               <div className="library-menu-popover" role="menu">
                 <button
-                  className="btn-primary btn-nav btn-nav-primary library-menu-action"
+                  className="btn-primary btn-nav library-menu-action"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -152,7 +152,7 @@ export function LibraryScreen({
                   Add Book
                 </button>
                 <button
-                  className="btn-secondary btn-nav btn-nav-secondary library-menu-action"
+                  className="btn-secondary btn-nav library-menu-action"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -169,13 +169,13 @@ export function LibraryScreen({
         <h1 className="library-title">ReadAway</h1>
         <div className="library-actions">
           <button
-            className="btn-primary btn-nav btn-nav-primary"
+            className="btn-primary btn-nav"
             onClick={onImportEpub}
           >
             Add Book
           </button>
           <button
-            className="btn-secondary btn-nav btn-nav-secondary"
+            className="btn-secondary btn-nav"
             onClick={onSettings}
           >
             Settings

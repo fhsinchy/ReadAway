@@ -213,8 +213,10 @@ Actions:
 ## Unsupported EPUB State
 
 ```text id="jlwmct"
-This version of ReadAway currently supports EPUB books from Standard Ebooks and Project Gutenberg only.
+ReadAway currently supports EPUB books from Standard Ebooks and Project Gutenberg only.
 ```
+
+Standard Ebooks and Project Gutenberg are links to their ebook catalogs.
 
 Actions:
 

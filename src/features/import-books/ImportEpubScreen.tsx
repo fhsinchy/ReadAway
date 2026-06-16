@@ -59,7 +59,7 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
           <button className="btn-primary" onClick={handleChooseFile}>
             Choose EPUB
           </button>
-          <button className="btn-text" onClick={onBack}>
+          <button className="btn-secondary" onClick={onBack}>
             Back
           </button>
         </div>
@@ -83,7 +83,7 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
             >
               Read Now
             </button>
-            <button className="btn-text" onClick={onLibrary}>
+            <button className="btn-secondary" onClick={onLibrary}>
               Back to Library
             </button>
           </div>
@@ -96,8 +96,23 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
             <>
               <h2>Unsupported EPUB</h2>
               <p>
-                This version of ReadAway currently supports EPUB books from
-                Standard Ebooks and Project Gutenberg only.
+                ReadAway currently supports EPUB books from{' '}
+                <a
+                  href="https://standardebooks.org/ebooks"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Standard Ebooks
+                </a>{' '}
+                and{' '}
+                <a
+                  href="https://www.gutenberg.org/ebooks/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Project Gutenberg
+                </a>{' '}
+                only.
               </p>
             </>
           )}
@@ -110,7 +125,10 @@ export function ImportEpubScreen({ onBack, onReadNow, onLibrary }: Props) {
               </p>
             </>
           )}
-          <button className="btn-text" onClick={() => setState({ phase: 'choose' })}>
+          <button
+            className="btn-secondary"
+            onClick={() => setState({ phase: 'choose' })}
+          >
             Back
           </button>
         </div>

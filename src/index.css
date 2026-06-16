@@ -368,7 +368,7 @@ a {
 
 .btn-secondary {
   padding: 9px 16px;
-  border: 1px solid var(--app-border);
+  border: 1px solid var(--app-text);
   background: transparent;
   color: var(--app-text);
 }
@@ -407,27 +407,6 @@ a {
   padding: 4px 16px;
   border-radius: 0;
   font-weight: 400;
-}
-
-.btn-nav-primary {
-  border-color: var(--app-primary);
-  background: var(--app-primary);
-  color: var(--app-primary-text);
-}
-
-.btn-nav-primary:hover {
-  border-color: var(--app-primary-hover);
-  background: var(--app-primary-hover);
-}
-
-.btn-nav-secondary {
-  border-color: var(--app-text);
-  background: transparent;
-  color: var(--app-text);
-}
-
-.btn-nav-secondary:hover {
-  background: var(--app-surface-muted);
 }
 
 input[type='checkbox'],

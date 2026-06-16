@@ -35,6 +35,7 @@
 }
 
 .import-epub .btn-primary,
+.import-epub .btn-secondary,
 .import-epub .btn-text {
   margin: 4px 0;
 }
@@ -100,7 +101,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 8px;
+  max-width: 420px;
 }
 
 .import-epub-error h2 {
@@ -109,4 +112,8 @@
 
 .import-epub-error p {
   color: var(--app-text-muted);
+}
+
+.import-epub-error a {
+  color: var(--app-link);
 }
