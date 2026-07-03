@@ -738,6 +738,42 @@ Read books offline and access ReadAway from your home screen.
 
 ---
 
+# PWA Update Experience
+
+Purpose:
+
+Let users know when a new version of ReadAway is available.
+
+Presentation:
+
+Non-blocking prompt.
+
+Shown when the service worker detects new app content.
+
+---
+
+## Layout
+
+```text id="pwa-update"
+Update Available
+
+A new version of ReadAway is ready.
+
+[Update]
+[Not Now]
+```
+
+---
+
+## Rules
+
+* Never forces a refresh.
+* Dismissible.
+* Only reloads after the user chooses Update.
+* May appear above any screen, including the reader.
+
+---
+
 # Screen Rules
 
 ReadAway should feel:

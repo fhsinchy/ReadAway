@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Book } from '@/types'
 import { Search } from 'lucide-react'
+import { AppNoticeBanner } from '@/components/AppNoticeBanner'
 import { useBooks } from '@/hooks/useBooks'
 import type { PwaInstallControls } from '@/hooks/usePwaInstall'
 import { db } from '@/db'
@@ -185,22 +186,14 @@ export function LibraryScreen({
 
       {/* PWA Install Prompt */}
       {showPrompt && (
-        <div className="install-banner">
-          <div className="install-banner-content">
-            <h3>Install ReadAway</h3>
-            <p>
-              Read books offline and access ReadAway from your home screen.
-            </p>
-          </div>
-          <div className="install-banner-actions">
-            <button className="btn-primary" onClick={triggerInstallPrompt}>
-              Install
-            </button>
-            <button className="btn-text" onClick={dismissPrompt}>
-              Not Now
-            </button>
-          </div>
-        </div>
+        <AppNoticeBanner
+          title="Install ReadAway"
+          message="Read books offline and access ReadAway from your home screen."
+          primaryLabel="Install"
+          secondaryLabel="Not Now"
+          onPrimary={triggerInstallPrompt}
+          onSecondary={dismissPrompt}
+        />
       )}
 
       {/* Content */}

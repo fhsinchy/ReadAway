@@ -7,8 +7,10 @@ import { ReaderScreen } from '@/features/reader/ReaderScreen'
 import { TableOfContentsScreen } from '@/features/reader/TableOfContentsScreen'
 import { SettingsScreen } from '@/features/settings/SettingsScreen'
 import { ExportBooksScreen } from '@/features/export-library/ExportBooksScreen'
+import { AppNoticeBanner } from '@/components/AppNoticeBanner'
 import { useAppTheme } from '@/hooks/useAppTheme'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
+import { usePwaUpdate } from '@/hooks/usePwaUpdate'
 import { db } from '@/db'
 
 const ACTIVE_BOOK_KEY = 'readaway-active-book'
@@ -16,6 +18,7 @@ const ACTIVE_BOOK_KEY = 'readaway-active-book'
 export function App() {
   const { appTheme, resolvedAppTheme, setAppTheme } = useAppTheme()
   const pwaInstall = usePwaInstall()
+  const pwaUpdate = usePwaUpdate()
   const [screenStack, setScreenStack] = useState<Screen[]>(() => {
     // Restore reader screen on refresh
     const saved = sessionStorage.getItem(ACTIVE_BOOK_KEY)
@@ -126,6 +129,17 @@ export function App() {
       className="app-shell"
       data-app-theme={resolvedAppTheme}
     >
+      {pwaUpdate.updateAvailable && (
+        <AppNoticeBanner
+          title="Update Available"
+          message="A new version of ReadAway is ready."
+          primaryLabel="Update"
+          secondaryLabel="Not Now"
+          placement="fixed"
+          onPrimary={pwaUpdate.applyUpdate}
+          onSecondary={pwaUpdate.dismissUpdate}
+        />
+      )}
       {renderScreen()}
     </div>
   )

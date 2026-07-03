@@ -593,6 +593,7 @@ Requirements:
 
 * Offline application shell
 * Installable experience
+* User-visible update prompt
 * Service worker support
 * Imported books accessible offline
 * Installed dictionaries accessible offline
@@ -600,6 +601,10 @@ Requirements:
 The application shell and imported books must function without an internet
 connection after installation and import. Installed dictionaries must also
 function without an internet connection after dictionary installation.
+
+Service worker updates use the prompted update flow. When a new version is
+ready, ReadAway shows a dismissible update prompt and reloads only after the
+user confirms.
 
 ---
 

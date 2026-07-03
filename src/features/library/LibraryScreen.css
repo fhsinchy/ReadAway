@@ -354,42 +354,6 @@
   text-align: right;
 }
 
-/* Install banner */
-
-.install-banner {
-  width: min(calc(100% - 48px), 1360px);
-  margin: 12px auto;
-  padding: 16px;
-  background: var(--app-surface);
-  border: 1px solid var(--app-border);
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.install-banner-content h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--app-text);
-  margin-bottom: 2px;
-}
-
-.install-banner-content p {
-  font-size: 1rem;
-  color: var(--app-text-muted);
-  line-height: 1.4;
-}
-
-.install-banner-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
-}
-
 /* Empty state */
 
 .library-empty {

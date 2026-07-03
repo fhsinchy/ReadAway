@@ -318,9 +318,64 @@ a {
 }
 
 .app-shell {
+  position: relative;
   height: 100dvh;
   background: var(--app-bg);
   color: var(--app-text);
+  overflow: hidden;
+}
+
+.app-notice-banner {
+  display: flex;
+  width: min(calc(100% - 48px), 1360px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  flex-wrap: wrap;
+}
+
+.app-notice-banner-inline {
+  margin: 12px auto;
+}
+
+.app-notice-banner-fixed {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  z-index: 150;
+  transform: translateX(-50%);
+  box-shadow: var(--app-shadow);
+}
+
+.app-notice-banner-content h2 {
+  margin-bottom: 2px;
+  color: var(--app-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.app-notice-banner-content p {
+  color: var(--app-text-muted);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.app-notice-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .app-notice-banner-fixed {
+    top: 12px;
+    width: calc(100% - 24px);
+  }
 }
 
 .header-spacer {

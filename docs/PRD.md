@@ -336,6 +336,7 @@ Requirements:
 * Previously imported books available offline.
 * Reading progress preserved offline.
 * Installed dictionaries available offline.
+* New application versions are announced with a user-confirmed update prompt.
 
 ---
 
@@ -427,6 +428,18 @@ Requirements:
 * Never blocks reading.
 * Dismissible.
 * Never shown more than once per session.
+
+---
+
+# Update Experience
+
+ReadAway may prompt users when a new application version is ready.
+
+Requirements:
+
+* Never forces a refresh.
+* Dismissible.
+* Reloads only after the user chooses to update.
 
 ---
 
